@@ -38,6 +38,8 @@ collected a lot of single-purpose repos. v2 is opinionated:
 | --- | --- | --- |
 | [`.github`](https://github.com/FG-CollectLabs/.github) | live | this profile README |
 | [`sellthrough-analyzer`](https://github.com/FG-CollectLabs/sellthrough-analyzer) | scaffolding | sealed-box sell-through, depth, and price-move prediction signals |
+| [`slab-cracker-frontend`](https://github.com/FG-CollectLabs/slab-cracker-frontend) | scaffolding | card-centering measurement web app (Vite + TypeScript); v2 of `slab-cracker` |
+| [`slab-cracker-extension`](https://github.com/FG-CollectLabs/slab-cracker-extension) | scaffolding | Chrome MV3 extension: right-click capture, region capture, PSA/CGC cert auto-fetch |
 
 More to come as v1 tools are migrated and improved.
 
