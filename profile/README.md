@@ -36,12 +36,15 @@ collected a lot of single-purpose repos. v2 is opinionated:
 
 | Repo | Status | Purpose |
 | --- | --- | --- |
-| [`.github`](https://github.com/FG-CollectLabs/.github) | live | this profile README |
+| [`.github`](https://github.com/FG-CollectLabs/.github) | live | org profile and project planning docs |
+| [`ws-set-analysis`](https://github.com/FG-CollectLabs/ws-set-analysis) | live | Weiss Schwarz booster investment analysis blog + Claude agent — [fg-collectlabs.github.io/ws-set-analysis](https://fg-collectlabs.github.io/ws-set-analysis/) |
+| [`market-tracker-backend`](https://github.com/FG-CollectLabs/market-tracker-backend) | active | Go API + PostgreSQL + BigQuery pipeline for TCG market price tracking |
+| [`card-identifier-backend`](https://github.com/FG-CollectLabs/card-identifier-backend) | active | Go API for card identification via pHash + OCR; metadata and pricing microservice |
+| [`card-identifier-frontend`](https://github.com/FG-CollectLabs/card-identifier-frontend) | active | Vite/TS frontend for the card identifier |
+| [`ev-calculator`](https://github.com/FG-CollectLabs/ev-calculator) | active | Go service: sealed product EV calculator, pulls live prices from market-tracker |
 | [`sellthrough-analyzer`](https://github.com/FG-CollectLabs/sellthrough-analyzer) | scaffolding | sealed-box sell-through, depth, and price-move prediction signals |
 | [`slab-cracker-frontend`](https://github.com/FG-CollectLabs/slab-cracker-frontend) | scaffolding | card-centering measurement web app (Vite + TypeScript); v2 of `slab-cracker` |
 | [`slab-cracker-extension`](https://github.com/FG-CollectLabs/slab-cracker-extension) | scaffolding | Chrome MV3 extension: right-click capture, region capture, PSA/CGC cert auto-fetch |
-
-More to come as v1 tools are migrated and improved.
 
 ## Conventions
 
