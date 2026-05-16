@@ -34,23 +34,99 @@ collected a lot of single-purpose repos. v2 is opinionated:
 
 ## Repos
 
+### Market Intelligence
+
 | Repo | Status | Purpose |
 | --- | --- | --- |
-| [`.github`](https://github.com/FG-CollectLabs/.github) | live | org profile and project planning docs |
-| [`ws-set-analysis`](https://github.com/FG-CollectLabs/ws-set-analysis) | live | Weiss Schwarz booster investment analysis blog + Claude agent — [fg-collectlabs.github.io/ws-set-analysis](https://fg-collectlabs.github.io/ws-set-analysis/) |
-| [`market-tracker-backend`](https://github.com/FG-CollectLabs/market-tracker-backend) | active | Go API + PostgreSQL + BigQuery pipeline for TCG market price tracking |
-| [`card-identifier-backend`](https://github.com/FG-CollectLabs/card-identifier-backend) | active | Go API for card identification via pHash + OCR; metadata and pricing microservice |
+| [`sellthrough-analyzer`](https://github.com/FG-CollectLabs/sellthrough-analyzer) | active | Python ingest pipeline — scrapes TCGPlayer, normalizes data, POSTs bulk records to market-tracker-backend |
+| [`market-tracker-backend`](https://github.com/FG-CollectLabs/market-tracker-backend) | active | Go API + PostgreSQL weekly price snapshots; BQ + GCS sync. Central price oracle for EV calculator and card-inventory |
+| [`market-tracker-frontend`](https://github.com/FG-CollectLabs/market-tracker-frontend) | active | Vite/React/TS dark SPA — sets index, set detail (market/cards/sealed/graded ROI tabs), card price history |
+| [`ev-calculator`](https://github.com/FG-CollectLabs/ev-calculator) | active | Go API + Hugo frontend: sealed product EV calculator, pulls live prices from market-tracker |
+
+### Card Tools
+
+| Repo | Status | Purpose |
+| --- | --- | --- |
+| [`card-identifier-backend`](https://github.com/FG-CollectLabs/card-identifier-backend) | active | Go API for card identification via pHash + OCR; metadata and pricing microservice; reused by card-inventory |
 | [`card-identifier-frontend`](https://github.com/FG-CollectLabs/card-identifier-frontend) | active | Vite/TS frontend for the card identifier |
-| [`ev-calculator`](https://github.com/FG-CollectLabs/ev-calculator) | active | Go service: sealed product EV calculator, pulls live prices from market-tracker |
-| [`sellthrough-analyzer`](https://github.com/FG-CollectLabs/sellthrough-analyzer) | scaffolding | sealed-box sell-through, depth, and price-move prediction signals |
-| [`slab-cracker-frontend`](https://github.com/FG-CollectLabs/slab-cracker-frontend) | scaffolding | card-centering measurement web app (Vite + TypeScript); v2 of `slab-cracker` |
-| [`slab-cracker-extension`](https://github.com/FG-CollectLabs/slab-cracker-extension) | scaffolding | Chrome MV3 extension: right-click capture, region capture, PSA/CGC cert auto-fetch |
+| [`slab-cracker-frontend`](https://github.com/FG-CollectLabs/slab-cracker-frontend) | scaffolding | Card centering measurement web app (Vite/TS); no backend — CORS fetches only |
+| [`slab-cracker-extension`](https://github.com/FG-CollectLabs/slab-cracker-extension) | scaffolding | Chrome MV3 extension: right-click region capture, PSA/CGC cert auto-fetch |
+
+### Investment Analysis
+
+| Repo | Status | Purpose |
+| --- | --- | --- |
+| [`ws-set-analysis`](https://github.com/FG-CollectLabs/ws-set-analysis) | live | Weiss Schwarz booster investment blog + Claude agent — [fg-collectlabs.github.io/ws-set-analysis](https://fg-collectlabs.github.io/ws-set-analysis/) |
+| [`anontcg-deal-analyzer`](https://github.com/FG-CollectLabs/anontcg-deal-analyzer) | active | AnonTCG subscriber ($1k coupon) deal analyzer — compares subscriber price vs TCGPlayer sealed and box-break EV; Hugo dashboard |
+| [`graded-regrade-tracker`](https://github.com/FG-CollectLabs/graded-regrade-tracker) | active | Personal buy→grade→sell P&L CLI; tracks purchases, grading submissions, results, and sales; joins market-tracker for market context |
+
+### Inventory (Planning)
+
+| Repo | Status | Purpose |
+| --- | --- | --- |
+| `card-inventory-backend` | planning | Multi-tenant TCG inventory SaaS Go API — scan, chaos-sort bins, item transformations (break/grade/crack), listing sync |
+| `card-inventory-frontend` | planning | Vite/TS frontend for card-inventory |
+| `card-inventory-scanner` | planning | Go folder-watcher/batch ingest that calls card-identifier-backend |
+| [`fg-collectlabs-infra`](https://github.com/FG-CollectLabs/fg-collectlabs-infra) | scaffolding | Terraform for shared GCS, BQ, and IAM resources |
+
+### Org
+
+| Repo | Status | Purpose |
+| --- | --- | --- |
+| [`.github`](https://github.com/FG-CollectLabs/.github) | live | Org profile and cross-repo project planning docs (`projects/`) |
+
+## How projects connect
+
+```
+sellthrough-analyzer (Python scraper)
+  │  scrapes TCGPlayer / Manapool weekly; POSTs bulk prices
+  ▼
+market-tracker-backend ──── PostgreSQL 192.168.86.182 (market_tracker DB)
+  │  Go API — catalog, weekly snapshots, graded layer
+  ├── weekly sync ──► BigQuery  (full snapshot history)
+  └── weekly sync ──► GCS       (static JSON for stale consumers)
+        ↑ consumed by
+        ├── market-tracker-frontend  (Vite SPA, :5175)
+        ├── ev-calculator            (Go API :8081 → Hugo frontend :1313)
+        └── graded-regrade-tracker   (Go CLI; joins MT DB at report time)
+
+card-identifier-backend ─── PostgreSQL 192.168.86.181 (card_identifier DB)
+  │  Go API — pHash + OCR; optional price lookup from market-tracker
+  ├── called by  card-identifier-frontend  (:5174)
+  ├── called by  ev-calculator API         (proxied scan endpoint)
+  └── will be called by  card-inventory-backend (planning)
+
+card-inventory-backend (planning)
+  │  multi-tenant: inventory, acquisitions, transformations, listings
+  ├── calls  card-identifier-backend  for scan identification
+  ├── calls  market-tracker-backend   for market price at acquisition
+  └── nightly BQ export ─► card_inventory BQ dataset
+                           (joined against price_tracker for P&L views)
+
+slab-cracker-frontend + slab-cracker-extension  — standalone, no backend
+anontcg-deal-analyzer  — Python MCPs + YAML catalog + Hugo dashboard
+ws-set-analysis        — Python MCPs + Claude agent + Hugo → GitHub Pages
+
+graded-market-watch (planning, inside market-tracker-backend)
+  — PSA/CGC pop report scrapers, gem rate view, watchlist signals
+```
+
+## Infrastructure
+
+| Layer | Where | Notes |
+| --- | --- | --- |
+| Go APIs | Proxmox homelab LXCs | Docker containers; market-tracker at .182, card-identifier at .181 |
+| PostgreSQL | Proxmox homelab | PG 15 on Debian; credentials in `~/.config/fg-collectlabs/pg-servers.json` |
+| BigQuery + GCS | GCP | Analytical warehouse + static JSON cache; sync jobs via Cloud Run Jobs |
+| Frontends | Local dev / GitHub Pages | Vite dev servers locally; Hugo sites to GitHub Pages |
+| Cloudflare Tunnel | homelab ingress | `*.futuregadgetlabs.com` subdomains routed into Proxmox |
+
+Target (not yet migrated): Neon (PG branches) + Cloud Run (Go APIs) + GitHub Pages (frontends).
 
 ## Conventions
 
-- Python for data work, TypeScript for any UI.
-- Each analyzer ships with a documented metric catalog — what we
-  measure, how we measure it, what it's supposed to predict.
+- Go for APIs and CLI tools. Python for scraping and agent orchestration. TypeScript for UIs.
+- Every Go API mirrors the pattern at [`FG-CollectShop/fg-collect-core`](https://github.com/FG-CollectShop/fg-collect-core): per-repo `migrations/` + `queries/` + sqlc generation into `internal/db/dbgen/`.
 - Raw scrapes are immutable; derived metrics are recomputed from raw.
-- Anything that hits a paid or rate-limited API is cached aggressively
-  and never run by accident.
+- Anything that hits a paid or rate-limited API is cached aggressively and never run by accident.
+- Project planning docs (architecture, decisions, TODOs) live in `.github/projects/<project>/`.

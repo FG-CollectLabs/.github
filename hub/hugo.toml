@@ -1,0 +1,6 @@
+baseURL = "https://fg-collectlabs.github.io/.github/"
+title = "FG-CollectLabs Hub"
+languageCode = "en-US"
+
+# Single-page site — suppress all generated list/taxonomy/sitemap pages
+disableKinds = ["sitemap", "robotsTXT", "404", "rss", "taxonomy", "term"]

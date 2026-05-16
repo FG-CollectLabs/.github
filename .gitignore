@@ -2,3 +2,8 @@
 Thumbs.db
 .vscode/
 .idea/
+
+# Hugo build output
+hub/public/
+hub/resources/
+

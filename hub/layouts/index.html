@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FG-CollectLabs — Hub</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --gray: #484f58;
+      --purple: #bc8cff;
+      --font: ui-monospace, 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 18px; }
+    header .sub { color: var(--muted); font-size: 12px; }
+    .header-links { margin-left: auto; display: flex; gap: 12px; }
+    .header-links a { color: var(--muted); text-decoration: none; font-size: 12px; }
+    .header-links a:hover { color: var(--accent); }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 28px 0 12px;
+      padding-left: 2px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: var(--accent); }
+
+    .card-header { display: flex; align-items: flex-start; gap: 10px; }
+    .card-title { font-size: 14px; font-weight: 600; flex: 1; }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-live    { background: #1a3a22; color: var(--green);  border: 1px solid #2d5a38; }
+    .badge-local   { background: #2a2200; color: var(--yellow); border: 1px solid #4a3a00; }
+    .badge-homelab { background: #1a1f3a; color: #79c0ff;       border: 1px solid #2a3a6a; }
+    .badge-cli     { background: #1f1f1f; color: var(--muted);  border: 1px solid var(--border); }
+    .badge-plan    { background: #1a1a22; color: var(--purple); border: 1px solid #3a3a5a; }
+
+    .card-desc { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .tech-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tech {
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 6px;
+    }
+
+    .links { display: flex; flex-direction: column; gap: 4px; }
+    .link-row { display: flex; align-items: center; gap: 8px; }
+    .link-label { font-size: 10px; color: var(--muted); width: 56px; flex-shrink: 0; }
+    .link-row a { color: var(--accent); text-decoration: none; font-size: 12px; word-break: break-all; }
+    .link-row a:hover { text-decoration: underline; }
+
+    .cmd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: #7ee787;
+      white-space: nowrap;
+      overflow-x: auto;
+      cursor: text;
+      user-select: all;
+    }
+    .cmd::before { content: '$ '; color: var(--muted); }
+
+    .arch {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px 24px;
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+    .arch pre {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.7;
+      white-space: pre;
+    }
+    .arch pre .hi  { color: var(--text); }
+    .arch pre .acc { color: var(--accent); }
+    .arch pre .grn { color: var(--green); }
+
+    .dep-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+    .dep-table th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dep-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #1c2128;
+      vertical-align: top;
+    }
+    .dep-table tr:last-child td { border-bottom: none; }
+    .dep-table td:first-child { color: var(--text); white-space: nowrap; }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>FG-CollectLabs</h1>
+  <span class="sub">dev hub</span>
+  <div class="header-links">
+    <a href="https://github.com/FG-CollectLabs" target="_blank">github.com/FG-CollectLabs</a>
+    <a href="https://github.com/FG-CollectShop" target="_blank">FG-CollectShop</a>
+  </div>
+</header>
+
+<!-- ── LIVE / DEPLOYED ─────────────────────────────────── -->
+<div class="section-label">Live &amp; Deployed</div>
+<div class="grid">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">WS Set Analysis Blog</div>
+      <span class="badge badge-live">live</span>
+    </div>
+    <div class="card-desc">Preorder investment analysis for Weiss Schwarz booster sets. Hugo static site on GitHub Pages. Claude agent drives IP strength, EN historical, and JP set analysis sub-agents via MCP servers.</div>
+    <div class="tech-row">
+      <span class="tech">Hugo</span>
+      <span class="tech">Python</span>
+      <span class="tech">MCP (Jikan / Yuyutei / TCGPlayer)</span>
+      <span class="tech">GitHub Pages</span>
+    </div>
+    <div class="links">
+      <div class="link-row">
+        <span class="link-label">live</span>
+        <a href="https://fg-collectlabs.github.io/ws-set-analysis/" target="_blank">fg-collectlabs.github.io/ws-set-analysis/</a>
+      </div>
+      <div class="link-row">
+        <span class="link-label">repo</span>
+        <a href="https://github.com/FG-CollectLabs/ws-set-analysis" target="_blank">FG-CollectLabs/ws-set-analysis</a>
+      </div>
+    </div>
+    <div class="cmd">cd ws-set-analysis/blog &amp;&amp; hugo serve</div>
+  </div>
+
+</div>
+
+<!-- ── FRONTENDS ──────────────────────────────────────── -->
+<div class="section-label">Frontends — Local Dev</div>
+<div class="grid">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Market Tracker Frontend</div>
+      <span class="badge badge-local">local :5175</span>
+    </div>
+    <div class="card-desc">Dark SPA for TCG market price tracking. Sets index, set detail (market / cards / sealed / graded ROI tabs), card price history, graded coverage.</div>
+    <div class="tech-row">
+      <span class="tech">Vite</span><span class="tech">React 18</span>
+      <span class="tech">TypeScript</span><span class="tech">Tailwind v3</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:5175" target="_blank">localhost:5175</a></div>
+      <div class="link-row"><span class="link-label">api</span><a href="http://localhost:8080" target="_blank">localhost:8080</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">→ market-tracker-backend</span></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/market-tracker-frontend" target="_blank">market-tracker-frontend</a></div>
+    </div>
+    <div class="cmd">cd market-tracker-frontend &amp;&amp; npm run dev</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">EV Calculator Frontend</div>
+      <span class="badge badge-local">local :1313</span>
+    </div>
+    <div class="card-desc">Hugo frontend for sealed product EV calculator. Commander precon cases ranked by EV. Fetches live prices from the Go API at :8081, which in turn calls market-tracker-backend.</div>
+    <div class="tech-row">
+      <span class="tech">Hugo</span><span class="tech">Vanilla JS</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:1313" target="_blank">localhost:1313</a></div>
+      <div class="link-row"><span class="link-label">api</span><a href="http://localhost:8081" target="_blank">localhost:8081</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/ev-calculator" target="_blank">ev-calculator</a></div>
+    </div>
+    <div class="cmd">cd ev-calculator/frontend &amp;&amp; hugo serve</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Card Identifier Frontend</div>
+      <span class="badge badge-local">local :5174</span>
+    </div>
+    <div class="card-desc">Image upload UI for card identification via pHash + OCR. Settings drawer configures backend URL. Kept standalone — not merged into card-inventory.</div>
+    <div class="tech-row">
+      <span class="tech">Vite</span><span class="tech">TypeScript</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:5174" target="_blank">localhost:5174</a></div>
+      <div class="link-row"><span class="link-label">homelab</span><a href="http://192.168.86.181:8080" target="_blank">192.168.86.181:8080</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/card-identifier-frontend" target="_blank">card-identifier-frontend</a></div>
+    </div>
+    <div class="cmd">cd card-identifier-frontend &amp;&amp; npm run dev</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Slab Cracker</div>
+      <span class="badge badge-local">local :5173</span>
+    </div>
+    <div class="card-desc">Card centering measurement web app. No backend — CORS-restricted fetches only. PSA/CGC cert auto-fetch lives in the companion Chrome MV3 extension.</div>
+    <div class="tech-row">
+      <span class="tech">Vite</span><span class="tech">TypeScript</span>
+      <span class="tech">Chrome MV3 extension</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:5173" target="_blank">localhost:5173</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/slab-cracker-frontend" target="_blank">slab-cracker-frontend</a></div>
+    </div>
+    <div class="cmd">cd slab-cracker-frontend &amp;&amp; npm run dev</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">AnonTCG Deal Analyzer</div>
+      <span class="badge badge-local">local :1314</span>
+    </div>
+    <div class="card-desc">Hugo dashboard comparing AnonTCG subscriber prices ($1k coupon) vs TCGPlayer sealed and box-break EV. 45-product YAML catalog across 5 games. Sortable by discount metric.</div>
+    <div class="tech-row">
+      <span class="tech">Hugo</span><span class="tech">Python</span>
+      <span class="tech">Playwright</span><span class="tech">MCP</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:1314" target="_blank">localhost:1314</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/anontcg-deal-analyzer" target="_blank">anontcg-deal-analyzer</a></div>
+    </div>
+    <div class="cmd">cd anontcg-deal-analyzer/blog &amp;&amp; hugo serve -p 1314</div>
+  </div>
+
+</div>
+
+<!-- ── BACKENDS ───────────────────────────────────────── -->
+<div class="section-label">Backends — Homelab Proxmox</div>
+<div class="grid">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Market Tracker Backend</div>
+      <span class="badge badge-homelab">192.168.86.182:8080</span>
+    </div>
+    <div class="card-desc">Go API + PostgreSQL for weekly TCG market prices. Catalog reads, price snapshots, graded data, BQ/GCS sync. Central price oracle for EV calculator and card-inventory.</div>
+    <div class="tech-row">
+      <span class="tech">Go</span><span class="tech">pgx / sqlc</span>
+      <span class="tech">PostgreSQL</span><span class="tech">BigQuery</span><span class="tech">GCS</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">homelab</span><a href="http://192.168.86.182:8080/healthz" target="_blank">192.168.86.182:8080</a></div>
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:8080/healthz" target="_blank">localhost:8080</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/market-tracker-backend" target="_blank">market-tracker-backend</a></div>
+    </div>
+    <div class="cmd">cd market-tracker-backend &amp;&amp; go run ./cmd/api</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">EV Calculator API</div>
+      <span class="badge badge-local">local :8081</span>
+    </div>
+    <div class="card-desc">Go HTTP API serving sealed product EV reports. Reads YAML deck configs from disk. Pulls live prices from market-tracker (TCGCSV fallback). Also proxies card-identifier for scan uploads.</div>
+    <div class="tech-row">
+      <span class="tech">Go</span><span class="tech">YAML</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:8081/healthz" target="_blank">localhost:8081</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/ev-calculator" target="_blank">ev-calculator</a></div>
+    </div>
+    <div class="cmd">cd ev-calculator &amp;&amp; go run ./cmd/api</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Card Identifier Backend</div>
+      <span class="badge badge-homelab">192.168.86.181:8080</span>
+    </div>
+    <div class="card-desc">Go microservice for pHash + OCR card identification. Returns candidates with confidence scores. Optional market-tracker price integration. Will be called by card-inventory-backend.</div>
+    <div class="tech-row">
+      <span class="tech">Go</span><span class="tech">pgx / sqlc</span>
+      <span class="tech">PostgreSQL</span><span class="tech">GCS</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">homelab</span><a href="http://192.168.86.181:8080/healthz" target="_blank">192.168.86.181:8080</a></div>
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:8080/healthz" target="_blank">localhost:8080</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/card-identifier-backend" target="_blank">card-identifier-backend</a></div>
+    </div>
+    <div class="cmd">cd card-identifier-backend &amp;&amp; go run ./cmd/api</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Sellthrough Analyzer</div>
+      <span class="badge badge-homelab">pipeline</span>
+    </div>
+    <div class="card-desc">Python ingest pipeline — scrapes TCGPlayer/Manapool weekly, normalizes, and POSTs bulk price records to market-tracker-backend. Also feeds BigQuery for analytical history.</div>
+    <div class="tech-row">
+      <span class="tech">Python</span><span class="tech">BigQuery</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/sellthrough-analyzer" target="_blank">sellthrough-analyzer</a></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── CLI ────────────────────────────────────────────── -->
+<div class="section-label">CLI Tools</div>
+<div class="grid">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Graded Regrade Tracker</div>
+      <span class="badge badge-cli">CLI</span>
+    </div>
+    <div class="card-desc">Buy → analyze → grade → sell P&amp;L tracker. Records purchases, pre-grading analyses, submissions, results, and sales. Joins market-tracker for market context at report time.</div>
+    <div class="tech-row">
+      <span class="tech">Go</span><span class="tech">pgx / sqlc</span>
+      <span class="tech">PostgreSQL (graded_tracker on .182)</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/graded-regrade-tracker" target="_blank">graded-regrade-tracker</a></div>
+    </div>
+    <div class="cmd">graded-regrade-tracker report pnl</div>
+  </div>
+
+</div>
+
+<!-- ── PLANNING ───────────────────────────────────────── -->
+<div class="section-label">In Planning</div>
+<div class="grid">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Card Inventory</div>
+      <span class="badge badge-plan">planning</span>
+    </div>
+    <div class="card-desc">Multi-tenant TCG inventory SaaS (SwiftSort competitor). Scan → inventory → transform (break/grade/crack/regrade) → list → analyze. Chaos-sort bin tracking, BQ analytics joined against market-tracker price history.</div>
+    <div class="tech-row">
+      <span class="tech">Go</span><span class="tech">Vite / TS</span>
+      <span class="tech">PostgreSQL (RLS)</span><span class="tech">BigQuery</span><span class="tech">GCS</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">plan</span><a href="https://github.com/FG-CollectLabs/.github/tree/main/projects/card-inventory" target="_blank">.github/projects/card-inventory/</a></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Graded Market Watch</div>
+      <span class="badge badge-plan">planning</span>
+    </div>
+    <div class="card-desc">Extension of market-tracker-backend: PSA/CGC pop report scrapers, gem rate computation, weekly graded price snapshots (PriceCharting + Apify eBay), watchlist signals (undervalued-10, regrade-candidate-9).</div>
+    <div class="tech-row">
+      <span class="tech">Go (in market-tracker-backend)</span>
+      <span class="tech">PriceCharting API</span><span class="tech">Apify / eBay</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">plan</span><a href="https://github.com/FG-CollectLabs/.github/tree/main/projects/graded-market-watch" target="_blank">.github/projects/graded-market-watch/</a></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── ARCHITECTURE ───────────────────────────────────── -->
+<div class="section-label">Data Flow &amp; Dependencies</div>
+<div class="arch">
+<pre>
+<span class="hi">Data Ingestion</span>
+
+  <span class="acc">sellthrough-analyzer</span> (Python scraper)
+    │  scrapes TCGPlayer / Manapool weekly
+    │  POSTs bulk price records
+    ▼
+  <span class="acc">market-tracker-backend</span>  ←────────────── <span class="hi">PostgreSQL</span> 192.168.86.182 · market_tracker DB
+    │  Go API — catalog, weekly price snapshots, graded layer
+    ├─ weekly ──▶  <span class="hi">BigQuery</span>  (full snapshot history, analytical queries)
+    └─ weekly ──▶  <span class="hi">GCS</span>       (static JSON for stale consumers)
+
+
+<span class="hi">Price Consumers</span>
+
+  <span class="acc">market-tracker-frontend</span>  (Vite/React :5175)
+    └── GET /v1/*  ──▶  market-tracker-backend
+
+  <span class="acc">ev-calculator</span>  (Hugo :1313  +  Go API :8081)
+    └── API pulls prices from market-tracker-backend (TCGCSV fallback)
+
+  <span class="acc">graded-regrade-tracker</span>  (Go CLI)
+    └── joins market-tracker DB at report time for market context at purchase date
+
+
+<span class="hi">Card Identification</span>
+
+  <span class="acc">card-identifier-backend</span>  ←──────────────── <span class="hi">PostgreSQL</span> 192.168.86.181 · card_identifier DB
+    │  Go API — pHash + OCR; optional price lookup from market-tracker   <span class="hi">GCS</span> (scan images)
+    │
+    ├── called by  <span class="acc">card-identifier-frontend</span>  (Vite :5174)
+    ├── called by  <span class="acc">ev-calculator</span>  API (proxied scan endpoint)
+    └── will be called by  <span class="acc">card-inventory-backend</span>  (planning)
+
+
+<span class="hi">Standalone / Self-Contained</span>
+
+  <span class="acc">slab-cracker-frontend</span>  (Vite :5173)  ─  no backend; CORS fetches only
+    └── slab-cracker-extension  (Chrome MV3)  — right-click capture, PSA/CGC cert fetch
+
+  <span class="acc">anontcg-deal-analyzer</span>  (Hugo :1314)
+    └── Python MCP servers (AnonTCG Shopify API + Playwright TCGPlayer scrape)
+    └── YAML product catalog (45 products, 5 games)
+
+  <span class="acc">ws-set-analysis</span>  (Hugo → <span class="grn">GitHub Pages</span>)
+    └── Python MCP servers (Jikan/MAL, Yuyutei JP, TCGPlayer EN)
+    └── Claude agent drives analysis + post generation
+
+
+<span class="hi">Planning</span>
+
+  <span class="acc">card-inventory-backend</span>  ←──── <span class="hi">PostgreSQL</span> Proxmox · card_inventory DB
+    │  multi-tenant: inventory items, locations, acquisitions, transformations, listings
+    ├── calls  card-identifier-backend  (scan identification)
+    ├── calls  market-tracker-backend   (market price at acquisition)
+    └── nightly BQ export ──▶  card_inventory BQ dataset
+                               (joined against price_tracker for P&amp;L views)
+    frontend:  <span class="acc">card-inventory-frontend</span>  (Vite/TS)
+    scanner:   <span class="acc">card-inventory-scanner</span>   (Go folder-watcher)
+
+  <span class="acc">graded-market-watch</span>  (inside market-tracker-backend)
+    └── pop report scrapers, gem rate view, watchlist signals
+</pre>
+</div>
+
+<!-- ── DATABASE MAP ───────────────────────────────────── -->
+<div class="section-label">Database Map</div>
+<table class="dep-table">
+  <thead>
+    <tr>
+      <th>Host</th>
+      <th>Database</th>
+      <th>Owner Service</th>
+      <th>Key Tables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>192.168.86.182:5432</td>
+      <td>market_tracker</td>
+      <td>market-tracker-backend</td>
+      <td>games, sets, cards, sealed_products, weekly_prices, graded_snapshots_weekly</td>
+    </tr>
+    <tr>
+      <td>192.168.86.182:5432</td>
+      <td>graded_tracker</td>
+      <td>graded-regrade-tracker</td>
+      <td>tracked_cards, purchases, grading_submissions, grading_results, sales</td>
+    </tr>
+    <tr>
+      <td>192.168.86.181:5432</td>
+      <td>card_identifier</td>
+      <td>card-identifier-backend</td>
+      <td>cards (pHash fingerprints), scan_batches, scan_results</td>
+    </tr>
+    <tr>
+      <td>planning / Proxmox</td>
+      <td>card_inventory</td>
+      <td>card-inventory-backend</td>
+      <td>orgs, inventory_items, locations, acquisitions, transactions, item_transformations</td>
+    </tr>
+    <tr>
+      <td>BigQuery</td>
+      <td>price_tracker</td>
+      <td>sellthrough-analyzer</td>
+      <td>weekly_prices (full snapshot history for analytical queries)</td>
+    </tr>
+    <tr>
+      <td>BigQuery (planning)</td>
+      <td>card_inventory</td>
+      <td>card-inventory-backend</td>
+      <td>inventory_snapshots, transactions, transformations — joined against price_tracker</td>
+    </tr>
+  </tbody>
+</table>
+
+<footer>
+  FG-CollectLabs &nbsp;·&nbsp;
+  Proxmox credentials: <code>C:\Users\nguye\.config\fg-collectlabs\pg-servers.json</code> &nbsp;·&nbsp;
+  Infra: <code>fg-collectlabs-infra/</code> &nbsp;·&nbsp;
+  <a href="https://github.com/FG-CollectLabs/.github" target="_blank" style="color:var(--muted);">source</a>
+</footer>
+
+</body>
+</html>
