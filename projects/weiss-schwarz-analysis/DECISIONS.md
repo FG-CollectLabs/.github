@@ -155,16 +155,28 @@
 
 ---
 
-## WD-010 — OPEN: Competitive standing data source
+## WD-010 — Competitive standing data source: weissteatime.com
 
-**Date:** 2026-05-10
-**Status:** Open
+**Date:** 2026-05-10 (resolved 2026-05-17)
+**Status:** Accepted
 
-**Context:** Whether an IP is competitively relevant affects the sustained demand for its cards.
+**Context:** Whether an IP is competitively relevant affects sustained demand. WS is a non-rotating format where powercreep is the primary competitive driver — new sets for a top-tier IP (e.g., OSK) strictly upgrade existing decks, sustaining demand. Mid-tier sets may have "missing piece" potential where a future release unlocks their viability.
 
 **Options:**
 1. Scrape Bushiroad EN tournament top-8 deck lists from ws-tcg.com/events
 2. Manual tag in seed config (competitive: true/false/moderate)
-3. Defer — note it as "not analyzed" until tooling exists
+3. weissteatime.com tournament masterposts — community-curated, covers EN Worlds, BCS, BSF seasons with field % and top-cut conversion rates
+4. Defer — note it as "not analyzed" until tooling exists
 
-**Decision:** Manual tag in seed config for V1. We know the meta well enough to input this manually. Automate via tournament scraping in V2.
+**Decision:** Option 3 — `mcp-weissteatime` MCP server scraping weissteatime.com tournament deck category.
+
+**Rationale:** weissteatime.com is the de-facto authoritative community source for EN WS competitive results. It covers Worlds, BCS (regional circuit), and BSF (store finals) with consistent structure, set codes, field %, and top-cut data. Bushiroad's official site lacks aggregated meta statistics. Manual tags don't capture the "mid-competitive but rising" nuance needed for the powercreep and missing-piece investment theses.
+
+**Competitive tier definitions (derived from multi-season data):**
+- `high`: ≥15% field share in any major event, OR multiple seasons ≥10%, OR finalist placements at Worlds
+- `mid-high`: 8–15% field OR strong conversion rate (≥18%) at ≥5% field across 2+ events
+- `mid`: 3–8% field with meaningful top-cut appearances; potential "missing piece" — a future release could unlock viability
+- `low`: <3% field or isolated results only
+- `none`: no tournament presence found
+
+**Synthesis modifier:** `high` → +1 tier upgrade (powercreep demand driver); `mid-high` → neutral; `mid` → neutral + flag "missing piece" in post; `low`/`none` → −1 tier downgrade.

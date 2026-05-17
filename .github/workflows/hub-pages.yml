@@ -21,17 +21,36 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout hub (.github repo)
+        uses: actions/checkout@v4
+
+      - name: Checkout ev-calculator
+        uses: actions/checkout@v4
+        with:
+          repository: FG-CollectLabs/ev-calculator
+          path: _ev-calculator
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: "latest"
+          hugo-version: "0.147.0"
           extended: false
 
-      - name: Build Hugo site
+      - name: Build hub
         working-directory: hub
-        run: hugo --minify --baseURL "https://fg-collectlabs.github.io/.github/"
+        run: hugo --minify --baseURL "https://futuregadgetlabs.com/"
+
+      - name: Build EV calculator
+        working-directory: _ev-calculator/frontend
+        run: hugo --environment production --minify --baseURL "https://futuregadgetlabs.com/ev-calculator/"
+
+      - name: Merge EV calculator into hub output
+        run: |
+          mkdir -p hub/public/ev-calculator
+          cp -r _ev-calculator/frontend/public/. hub/public/ev-calculator/
+
+      - name: Add CNAME for custom domain
+        run: echo "futuregadgetlabs.com" > hub/public/CNAME
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

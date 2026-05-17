@@ -1,134 +1,84 @@
 # FG-CollectLabs
 
-Data collection and analysis tools for the TCG ecosystem — v2 of the
-[FutureGadgetCollections](https://github.com/FutureGadgetCollections) toolkit.
+Data collection, pricing intelligence, and inventory tooling for the TCG market — built end-to-end as a personal engineering project across Go APIs, Python pipelines, TypeScript SPAs, and Hugo static sites.
 
-**[→ EV Calculator](https://fg-collectlabs.github.io/ev-calculator/)** — live sealed product expected value tool
+**[→ futuregadgetlabs.com](https://futuregadgetlabs.com)** — live hub with health checks and architecture overview
+
+---
 
 ## What this org is
 
-FG-CollectLabs is the lab. It's where pricing, inventory, sell-through, and
-market-signal pipelines live for trading card games (Magic, Pokémon, One
-Piece, and whatever else is worth tracking). The goal is to turn noisy,
-fragmented marketplace data into clean metrics that can drive decisions —
-either directly (buy / hold / sell) or by feeding into an LLM that reasons
-about timing.
+A full-stack TCG market intelligence platform I built from scratch. The goal: turn fragmented, noisy marketplace data (TCGPlayer, Manapool, eBay) into clean pricing signals that drive real sell/hold/crack decisions for sealed product.
 
-This is a rebuild, not a fork. The original org grew organically and
-collected a lot of single-purpose repos. v2 is opinionated:
+Everything here is production software running against real data — not toy projects.
 
-- **Shared data shapes.** Every analyzer reads from and writes to the same
-  schemas, so cross-product comparisons are cheap.
-- **Sources are pluggable.** TCGPlayer, eBay, Crystal Commerce, retailer
-  inventories — each one is a thin adapter. Swappable, mockable, testable.
-- **Metrics over EV.** Expected-value-of-pack calculators already exist
-  everywhere. The interesting questions are about *timing*: when does
-  sealed go up, by how much, and what signals appear first?
+---
 
-## Sister orgs
+## Live tools
 
-- **[FG-CollectShop](https://github.com/FG-CollectShop)** — storefront and
-  inventory management. Consumes signals and pricing from CollectLabs;
-  exposes the public-facing store and the internal admin SPA.
-- **[FutureGadgetCollections](https://github.com/FutureGadgetCollections)** —
-  the v1 org. Repos are being audited and selectively migrated; expect
-  nothing here to depend on it long-term.
+| Tool | Stack | What it does |
+| --- | --- | --- |
+| [EV Calculator](https://futuregadgetlabs.com/ev-calculator/) | Go · Hugo · Vanilla JS · Firebase Auth · GitHub Pages | Sealed product expected-value calculator for MTG commander precon cases. Per-card market price breakdown, platform fee modeling (TCGPlayer/eBay/Manapool), eBay File Exchange CSV export, scan-to-identify via pHash+OCR. |
+| [Card Inventory](https://inventory.futuregadgetlabs.com) | Go · React/TS · Vite · PostgreSQL · Firebase Auth · Cloudflare Tunnel | Multi-tenant inventory management SaaS. Tracks box breaks, chaos-sort bin locations, grading submissions, eBay listings, and P&L. |
+| [WS Set Analysis](https://fg-collectlabs.github.io/ws-set-analysis/) | Python · Claude API · MCP servers · Hugo · GitHub Pages | AI-driven Weiss Schwarz booster investment blog. Claude agent orchestrates Jikan (anime data), Yuyutei (JP preorder prices), and TCGPlayer sub-agents to produce set investment writeups. |
+
+---
 
 ## Repos
 
 ### Market Intelligence
 
-| Repo | Status | Purpose |
+| Repo | Stack | Purpose |
 | --- | --- | --- |
-| [`sellthrough-analyzer`](https://github.com/FG-CollectLabs/sellthrough-analyzer) | active | Python ingest pipeline — scrapes TCGPlayer, normalizes data, POSTs bulk records to market-tracker-backend |
-| [`market-tracker-backend`](https://github.com/FG-CollectLabs/market-tracker-backend) | active | Go API + PostgreSQL weekly price snapshots; BQ + GCS sync. Central price oracle for EV calculator and card-inventory |
-| [`market-tracker-frontend`](https://github.com/FG-CollectLabs/market-tracker-frontend) | active | Vite/React/TS dark SPA — sets index, set detail (market/cards/sealed/graded ROI tabs), card price history |
-| [`ev-calculator`](https://github.com/FG-CollectLabs/ev-calculator) | active | Go API + Hugo frontend: sealed product EV calculator, pulls live prices from market-tracker |
+| [`market-tracker-backend`](https://github.com/FG-CollectLabs/market-tracker-backend) | **Go · pgx · sqlc · PostgreSQL · BigQuery · GCS** | Central price oracle. Weekly price snapshots for 10k+ cards across TCGPlayer and Manapool. BQ sync for analytical history. Serves batch price lookups to EV calculator and card-inventory. |
+| [`sellthrough-analyzer`](https://github.com/FG-CollectLabs/sellthrough-analyzer) | **Python · Playwright · BigQuery** | Scrapes TCGPlayer and Manapool weekly, normalizes records, POSTs bulk price updates to market-tracker-backend. Also feeds BigQuery for analytical history. |
+| [`market-tracker-frontend`](https://github.com/FG-CollectLabs/market-tracker-frontend) | **Vite · React 18 · TypeScript · Tailwind v3** | Dark SPA: sets index, per-set market/cards/sealed/graded ROI tabs, card price history charts, graded coverage overlay. |
+| [`ev-calculator`](https://github.com/FG-CollectLabs/ev-calculator) | **Go · Hugo · Vanilla JS · Firebase Auth** | Go API serving EV reports from YAML deck configs. Hugo frontend with per-platform fee modeling, eBay CSV export, and card scan identification proxy. |
 
 ### Card Tools
 
-| Repo | Status | Purpose |
+| Repo | Stack | Purpose |
 | --- | --- | --- |
-| [`card-identifier-backend`](https://github.com/FG-CollectLabs/card-identifier-backend) | active | Go API for card identification via pHash + OCR; metadata and pricing microservice; reused by card-inventory |
-| [`card-identifier-frontend`](https://github.com/FG-CollectLabs/card-identifier-frontend) | active | Vite/TS frontend for the card identifier |
-| [`slab-cracker-frontend`](https://github.com/FG-CollectLabs/slab-cracker-frontend) | scaffolding | Card centering measurement web app (Vite/TS); no backend — CORS fetches only |
-| [`slab-cracker-extension`](https://github.com/FG-CollectLabs/slab-cracker-extension) | scaffolding | Chrome MV3 extension: right-click region capture, PSA/CGC cert auto-fetch |
+| [`card-identifier-backend`](https://github.com/FG-CollectLabs/card-identifier-backend) | **Go · pgx · sqlc · PostgreSQL · GCS** | Card identification microservice via pHash fingerprint matching + OCR fallback. Returns ranked candidates with confidence scores. Shared by EV calculator and card-inventory. |
+| [`card-identifier-frontend`](https://github.com/FG-CollectLabs/card-identifier-frontend) | **Vite · TypeScript** | Standalone image-upload UI for the card identifier API. |
+| [`slab-cracker-frontend`](https://github.com/FG-CollectLabs/slab-cracker-frontend) | **Vite · TypeScript** | Card centering measurement web app. Clientside only — no backend. |
+| [`slab-cracker-extension`](https://github.com/FG-CollectLabs/slab-cracker-extension) | **Chrome MV3 · TypeScript** | Companion extension: right-click region capture, PSA/CGC cert lookup, CORS-restricted fetches. |
 
 ### Investment Analysis
 
-| Repo | Status | Purpose |
+| Repo | Stack | Purpose |
 | --- | --- | --- |
-| [`ws-set-analysis`](https://github.com/FG-CollectLabs/ws-set-analysis) | live | Weiss Schwarz booster investment blog + Claude agent — [fg-collectlabs.github.io/ws-set-analysis](https://fg-collectlabs.github.io/ws-set-analysis/) |
-| [`anontcg-deal-analyzer`](https://github.com/FG-CollectLabs/anontcg-deal-analyzer) | active | AnonTCG subscriber ($1k coupon) deal analyzer — compares subscriber price vs TCGPlayer sealed and box-break EV; Hugo dashboard |
-| [`graded-regrade-tracker`](https://github.com/FG-CollectLabs/graded-regrade-tracker) | active | Personal buy→grade→sell P&L CLI; tracks purchases, grading submissions, results, and sales; joins market-tracker for market context |
+| [`ws-set-analysis`](https://github.com/FG-CollectLabs/ws-set-analysis) | **Python · Claude API · MCP · Hugo · GitHub Pages** | Weiss Schwarz booster investment blog. Multi-agent system: Claude drives IP strength, EN historical, and JP price sub-agents via custom MCP servers. |
+| [`anontcg-deal-analyzer`](https://github.com/FG-CollectLabs/anontcg-deal-analyzer) | **Python · Playwright · Hugo** | Deal analyzer for AnonTCG subscriber pricing. Playwright scrapes TCGPlayer sealed prices; Hugo dashboard ranks 45 products across 5 games by discount metric. |
+| [`graded-regrade-tracker`](https://github.com/FG-CollectLabs/graded-regrade-tracker) | **Go · pgx · sqlc · PostgreSQL** | Buy→grade→sell P&L CLI. Tracks purchases, grading submissions, results, and sales. Joins market-tracker at report time for market context at each purchase date. |
 
-### Inventory (Planning)
+### Inventory (In Development)
 
-| Repo | Status | Purpose |
+| Repo | Stack | Purpose |
 | --- | --- | --- |
-| `card-inventory-backend` | planning | Multi-tenant TCG inventory SaaS Go API — scan, chaos-sort bins, item transformations (break/grade/crack), listing sync |
-| `card-inventory-frontend` | planning | Vite/TS frontend for card-inventory |
-| `card-inventory-scanner` | planning | Go folder-watcher/batch ingest that calls card-identifier-backend |
-| [`fg-collectlabs-infra`](https://github.com/FG-CollectLabs/fg-collectlabs-infra) | scaffolding | Terraform for shared GCS, BQ, and IAM resources |
+| [`card-inventory-backend`](https://github.com/FG-CollectLabs/card-inventory-backend) | **Go · pgx · PostgreSQL 16 · Firebase Auth · Docker** | Multi-tenant inventory SaaS API. Acquisitions (box breaks), chaos-sort bin locations, item transformations (break/grade/crack), listing sync, eBay order import. Firebase JWT auth with org-level RLS. |
+| [`card-inventory-frontend`](https://github.com/FG-CollectLabs/card-inventory-frontend) | **Vite · React · TypeScript · Firebase Auth** | Inventory management SPA. Card scanning, bin management, acquisition tracking, listing workflow. |
 
-### Org
-
-| Repo | Status | Purpose |
-| --- | --- | --- |
-| [`.github`](https://github.com/FG-CollectLabs/.github) | live | Org profile and cross-repo project planning docs (`projects/`) |
-
-## How projects connect
-
-```
-sellthrough-analyzer (Python scraper)
-  │  scrapes TCGPlayer / Manapool weekly; POSTs bulk prices
-  ▼
-market-tracker-backend ──── PostgreSQL 192.168.86.182 (market_tracker DB)
-  │  Go API — catalog, weekly snapshots, graded layer
-  ├── weekly sync ──► BigQuery  (full snapshot history)
-  └── weekly sync ──► GCS       (static JSON for stale consumers)
-        ↑ consumed by
-        ├── market-tracker-frontend  (Vite SPA, :5175)
-        ├── ev-calculator            (Go API :8081 → Hugo frontend :1313)
-        └── graded-regrade-tracker   (Go CLI; joins MT DB at report time)
-
-card-identifier-backend ─── PostgreSQL 192.168.86.181 (card_identifier DB)
-  │  Go API — pHash + OCR; optional price lookup from market-tracker
-  ├── called by  card-identifier-frontend  (:5174)
-  ├── called by  ev-calculator API         (proxied scan endpoint)
-  └── will be called by  card-inventory-backend (planning)
-
-card-inventory-backend (planning)
-  │  multi-tenant: inventory, acquisitions, transformations, listings
-  ├── calls  card-identifier-backend  for scan identification
-  ├── calls  market-tracker-backend   for market price at acquisition
-  └── nightly BQ export ─► card_inventory BQ dataset
-                           (joined against price_tracker for P&L views)
-
-slab-cracker-frontend + slab-cracker-extension  — standalone, no backend
-anontcg-deal-analyzer  — Python MCPs + YAML catalog + Hugo dashboard
-ws-set-analysis        — Python MCPs + Claude agent + Hugo → GitHub Pages
-
-graded-market-watch (planning, inside market-tracker-backend)
-  — PSA/CGC pop report scrapers, gem rate view, watchlist signals
-```
+---
 
 ## Infrastructure
 
-| Layer | Where | Notes |
-| --- | --- | --- |
-| Go APIs | Proxmox homelab LXCs | Docker containers; market-tracker at .182, card-identifier at .181 |
-| PostgreSQL | Proxmox homelab | PG 15 on Debian; credentials in `~/.config/fg-collectlabs/pg-servers.json` |
-| BigQuery + GCS | GCP | Analytical warehouse + static JSON cache; sync jobs via Cloud Run Jobs |
-| Frontends | Local dev / GitHub Pages | Vite dev servers locally; Hugo sites to GitHub Pages |
-| Cloudflare Tunnel | homelab ingress | `*.futuregadgetlabs.com` subdomains routed into Proxmox |
+All Go APIs run in Docker containers on a **Proxmox home-lab cluster** (3 nodes), exposed via **Cloudflare Tunnel** — no open inbound ports. Frontends deploy to **GitHub Pages** via GitHub Actions.
 
-Target (not yet migrated): Neon (PG branches) + Cloud Run (Go APIs) + GitHub Pages (frontends).
+| Layer | Technology |
+| --- | --- |
+| APIs | Go 1.22+ · `net/http` · pgx/v5 · sqlc |
+| Database | PostgreSQL 15/16 on Proxmox LXCs |
+| Analytical warehouse | BigQuery + GCS |
+| Ingestion | Python · Playwright · Apify |
+| Auth | Firebase Google OAuth (client) + Firebase Admin JWT (server) |
+| Frontends | Hugo · Vite · React 18 · TypeScript · Tailwind |
+| AI / Agents | Claude API · MCP servers (custom) |
+| Infra | Proxmox · Docker · Cloudflare Tunnel · GitHub Actions · Terraform (GCS/BQ/IAM) |
 
-## Conventions
+---
 
-- Go for APIs and CLI tools. Python for scraping and agent orchestration. TypeScript for UIs.
-- Every Go API mirrors the pattern at [`FG-CollectShop/fg-collect-core`](https://github.com/FG-CollectShop/fg-collect-core): per-repo `migrations/` + `queries/` + sqlc generation into `internal/db/dbgen/`.
-- Raw scrapes are immutable; derived metrics are recomputed from raw.
-- Anything that hits a paid or rate-limited API is cached aggressively and never run by accident.
-- Project planning docs (architecture, decisions, TODOs) live in `.github/projects/<project>/`.
+## Sister orgs
+
+- **[FG-CollectShop](https://github.com/FG-CollectShop)** — storefront and admin SPA. Consumes pricing signals from CollectLabs.
+- **[FutureGadgetCollections](https://github.com/FutureGadgetCollections)** — v1 predecessor org. Selectively being migrated.

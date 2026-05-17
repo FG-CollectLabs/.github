@@ -78,6 +78,29 @@
 - [x] W-123 Commit + push post; verify Hugo builds and renders correctly on GitHub Pages  (live: https://fg-collectlabs.github.io/ws-set-analysis/)
 - [ ] W-124 Post-run retrospective: what data was missing? what needed manual correction? → file issues for agent improvements
 
+## 10. Competitive Meta — weissteatime Integration
+
+> Source: `weissteatime.com/category/deck-lists/tournament-decks/`
+> Decision: WD-010 (resolved 2026-05-17)
+
+- [ ] W-200 Scaffold `mcp/weissteatime/server.py` using MCP Python SDK
+- [ ] W-201 Implement `get_tournament_index()` — scrape tournament deck category listing; return all posts with title, event type (Worlds/BCS/BSF), date range, URL
+- [ ] W-202 Implement `get_event_meta(url: str)` — scrape a single event masterpost; parse per-set-code: field %, top-cut appearances, first-place count, event size
+- [ ] W-203 Add 7-day file cache for event results: write to `seed-data/competitive/<event-slug>.json` with `cached_at`; re-use if fresh
+- [ ] W-204 Implement `get_set_competitive_history(set_codes: list[str])` — aggregate across all cached events; return per-season field %, conversion rate, trend
+- [ ] W-205 Write `agents/preorder/competitive_meta.py` sub-agent:
+  - Calls `get_tournament_index()` + `get_set_competitive_history(config.competitive_set_codes)`
+  - Classifies tier: `high` / `mid-high` / `mid` / `low` / `none` per ARCHITECTURE.md criteria
+  - Detects trend: rising / stable / falling (YoY field % delta)
+  - Flags "missing piece" when tier=`mid` and conversion_rate ≥ 15%
+  - Returns structured dict: `{ tier, trend, field_pct_by_season, top_cut_count, missing_piece: bool, narrative: str }`
+- [ ] W-206 Add `competitive_set_codes: list[str]` to set config schema (`agents/sets/*.json`); backfill for rezero-vol3 with `["RZ"]`
+- [ ] W-207 Wire `competitive_meta.py` into `run.py` orchestration (after jp_set_analysis, before synthesis)
+- [ ] W-208 Update `synthesis.py` to apply competitive tier modifier: `high` → +1 tier; `low`/`none` → −1 tier; others → neutral; append competitive narrative to synthesis output
+- [ ] W-209 Update `post_generator.py` Competitive Standing section: render season-by-season table, trend badge, and powercreep/missing-piece narrative from competitive_meta output
+- [ ] W-210 Test: run competitive_meta for OSK (Oshi no Ko) and verify `high` tier + powercreep narrative; run for RZ and classify
+- [ ] W-211 Seed competitive cache by running get_tournament_index + get_event_meta across all Worlds/BCS/BSF posts back to BSF 2023 (6 events)
+
 ## 8. Refinement (post first analysis)
 
 - [ ] W-140 Fine-tune recommendation heuristics based on retrospective (W-124)

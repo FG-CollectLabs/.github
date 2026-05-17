@@ -11,7 +11,7 @@
 1. **IP Strength** — Score an IP using MyAnimeList (anime + manga rank, score, members) with Google Trends as fallback for unranked IPs.
 2. **Historical EN Performance** — For every prior English printing of the IP, track preorder price, pull rates, high-rarity values, release date, and current price. Derive trend.
 3. **JP Set Analysis** — For the current Japanese set, extract all card prices from Yuyutei. Exclude AGR/signed rarities (they never appear in EN). Compute slot EV.
-4. **Competitive Meta** — Tag whether the IP has competitive standing in EN/JP WS meta.
+4. **Competitive Meta** — Score competitive standing from weissteatime.com tournament results: field representation %, top-cut conversion rate, and trend across BCS/BSF/Worlds seasons. Produces a tier (`high` / `mid-high` / `mid` / `low` / `none`) and a narrative covering both the powercreep thesis (new prints strictly upgrade top-tier decks) and the missing-piece thesis (mid-tier sets may unlock viability with a future release).
 5. **Recommendation** — Synthesize into a preorder signal: `strong-buy`, `buy`, `wait-for-dip`, or `pass`.
 6. **Blog output** — Generate a Hugo markdown post. Posts carry a `stage` tag so the same set can be revisited at preorder → 30d → 90d → 1yr.
 
@@ -30,6 +30,13 @@
 │           │                     │                          │               │
 │    mcp-jikan            mcp-ws-prices              mcp-yuyutei            │
 │    (Jikan v4 API)       (TCGPlayer scrape)         (Yuyutei scrape)       │
+│                                                                           │
+│  ┌─────────────────────────────────────────┐                             │
+│  │ Competitive Meta sub-agent              │                             │
+│  └──────────────────┬──────────────────────┘                             │
+│                     │                                                     │
+│             mcp-weissteatime                                              │
+│             (weissteatime.com tournament scraper)                        │
 │                                 │                                          │
 │                         seed-data/*.json                                   │
 │                         (pull rates, preorder prices — manual V1)         │
@@ -80,6 +87,7 @@ ws-set-analysis/
 │   │   ├── ip_strength.py        ← MAL + Google Trends sub-agent
 │   │   ├── en_historical.py      ← EN set history sub-agent
 │   │   ├── jp_set_analysis.py    ← Yuyutei JP set sub-agent
+│   │   ├── competitive_meta.py   ← tournament meta sub-agent (weissteatime)
 │   │   ├── synthesis.py          ← recommendation engine
 │   │   └── post_generator.py     ← generates Hugo markdown from structured data
 │   └── sets/
@@ -92,7 +100,10 @@ ws-set-analysis/
 │   ├── yuyutei/                  ← MCP server: Yuyutei JP card prices (scraper)
 │   │   ├── server.py
 │   │   └── README.md
-│   └── ws-prices/                ← MCP server: EN card prices (TCGPlayer scraper)
+│   ├── ws-prices/                ← MCP server: EN card prices (TCGPlayer scraper)
+│   │   ├── server.py
+│   │   └── README.md
+│   └── weissteatime/             ← MCP server: tournament meta from weissteatime.com
 │       ├── server.py
 │       └── README.md
 │
@@ -158,6 +169,32 @@ Scrapes TCGPlayer for EN WS card prices.
 
 **Implementation:** Python + `requests` or playwright if JS rendering required. Check if TCGPlayer has public endpoints first; scrape as fallback.
 
+### `mcp-weissteatime` — Tournament meta from weissteatime.com
+
+weissteatime.com is the community-authoritative source for EN WS competitive results. It covers Worlds, BCS (regional circuit), and BSF (store finals) with consistent event masterposts listing field representation % and top-cut placement by set code. WS is a non-rotating format — competitive demand compounds because new prints for top-tier IPs strictly upgrade existing decks (powercreep driver), and mid-tier sets may have future-release upside ("missing piece" thesis).
+
+**Tools exposed:**
+
+| Tool | Input | Output |
+|------|-------|--------|
+| `get_tournament_index()` | — | list of all tournament posts: title, event type (Worlds/BCS/BSF), date range, URL |
+| `get_event_meta(url: str)` | post URL | per-set-code: field %, top-cut appearances, first-place count, event size |
+| `get_set_competitive_history(set_codes: list[str])` | e.g. `["OSK", "RZ"]` | per season: field %, conversion rate, trend (rising/falling/stable), events covered |
+
+**Competitive tier classification** (applied by `competitive_meta.py`, not the MCP server):
+
+| Tier | Criteria |
+|------|----------|
+| `high` | ≥15% field in any major event, OR finalist/winner at Worlds, OR ≥10% average across 2+ seasons |
+| `mid-high` | 8–15% field OR conversion rate ≥18% at ≥5% field across 2+ events |
+| `mid` | 3–8% field with top-cut appearances; flag "missing piece" — a future release may unlock full viability |
+| `low` | <3% field or only isolated results |
+| `none` | No tournament presence found |
+
+**Caching:** Write raw event JSON to `seed-data/competitive/<event-slug>.json` with `cached_at`. Re-use if <7d old (events don't change after posting).
+
+**Implementation:** Python + `httpx` + `BeautifulSoup4`. The tournament category page at `weissteatime.com/category/deck-lists/tournament-decks/` lists all posts; each event post has per-set field stats.
+
 ---
 
 ## Analysis Agent
@@ -174,6 +211,7 @@ Scrapes TCGPlayer for EN WS card prices.
   "language": "EN",
   "status": "preorder",
   "expected_release": "2026-Q3",
+  "competitive_set_codes": ["RZ"],
   "en_historical_sets": [
     { "name": "Re:Zero Vol.1",      "slug": "rezero-vol1",       "seed": "seed-data/en-sets/rezero-vol1.json" },
     { "name": "Re:Zero Vol.2",      "slug": "rezero-vol2",       "seed": "seed-data/en-sets/rezero-vol2.json" },
@@ -216,11 +254,21 @@ run.py <set-slug>
   │         ├── mcp-yuyutei: get_set_summary(yuyutei_id)
   │         └── For current set: full card list + EV breakdown
   │
+  ├── 4b. Competitive Meta (competitive_meta.py)
+  │       ├── mcp-weissteatime: get_tournament_index() → list all event posts
+  │       ├── FOR EACH event (cache hit preferred):
+  │       │     mcp-weissteatime: get_event_meta(url) → per-set field % and top-cut
+  │       ├── mcp-weissteatime: get_set_competitive_history(set_codes)
+  │       ├── Classify tier: high / mid-high / mid / low / none
+  │       ├── Detect trend: rising / falling / stable (YoY field % change)
+  │       ├── Flag "missing piece" if tier=mid and conversion_rate >= 15%
+  │       └── Produce: { tier, trend, field_pct_by_season, top_cut_count, missing_piece, narrative }
+  │
   ├── 5. Synthesis (synthesis.py)
   │       ├── IP score (weighted: anime rank × 0.6 + manga × 0.4)
   │       ├── EN trend (did prior sets appreciate? or dip-and-recover?)
   │       ├── JP EV vs typical EN preorder price (~$85-100 for EN)
-  │       ├── Competitive standing (manual tag from seed config)
+  │       ├── Competitive tier + modifier (from competitive_meta.py output)
   │       └── → recommendation: strong-buy | buy | wait-for-dip | pass
   │
   └── 6. Post Generator (post_generator.py)
@@ -230,14 +278,25 @@ run.py <set-slug>
 
 ### Recommendation logic (V1 heuristics — refine after first few sets)
 
+**Base signal from IP strength + EN trend:**
+
 | Condition | Signal |
 |-----------|--------|
 | IP rank < 500 on MAL anime + prior EN sets held or appreciated | `strong-buy` |
 | IP rank 500-2000 + positive EN trend | `buy` |
 | IP rank < 2000 but prior EN sets dipped >20% post release | `wait-for-dip` |
 | IP rank > 2000 or niche + EN trend flat/negative | `pass` |
-| JP EV significantly higher than expected EN preorder price | upgrade recommendation by one tier |
-| IP has no competitive standing in WS meta | downgrade by one tier |
+| JP EV significantly higher than expected EN preorder price | upgrade by one tier |
+
+**Competitive meta modifier (applied after base signal):**
+
+| Competitive tier | Modifier | Rationale |
+|-----------------|----------|-----------|
+| `high` (≥15% field or Worlds finalist) | **+1 tier** | New prints strictly upgrade the deck (non-rotating powercreep). Sustained tournament demand drives secondary market. |
+| `mid-high` (8-15% field, strong conversion) | neutral | Solid meta presence without dominant share; holds value but no multiplier. |
+| `mid` (3-8%, notable top-cut, rising trend) | neutral + flag **"missing piece"** | A future release synergizing with existing cards could unlock this deck; mid-tier buying now is low-risk with upside. |
+| `mid` (3-8%, flat/falling trend) | neutral | Present but no near-term catalyst; no adjustment. |
+| `low` / `none` | **−1 tier** | No competitive demand; secondary market relies entirely on casual collectors. |
 
 These heuristics are V1 starting points. We tune them after running the first 3-4 analyses and comparing predictions to outcomes.
 
@@ -283,7 +342,11 @@ draft: false
 [Notable cards: top 5 highest-value pulls]
 
 ## Competitive Standing
-[WS meta context for this IP — how often is it played in EN/JP tournaments?]
+[Tier badge: high / mid-high / mid / low / none]
+[Season-by-season table: season | event type | field % | top-cut appearances | conversion rate]
+[Trend summary: rising / stable / falling over last 2 seasons]
+[Powercreep thesis if tier=high: "New prints for this IP strictly improve the existing deck archetype, sustaining tournament demand and secondary market prices."]
+[Missing piece note if tier=mid + rising conversion: "This deck has shown strong conversion efficiency but limited field share — it may be missing one key card that a future release provides, making current cards a low-risk hold."]
 
 ## Recommendation: [BADGE]
 [detailed reasoning]
@@ -325,7 +388,8 @@ Current prices and rarity values are fetched live via MCP servers, not stored in
 | TCGPlayer | https://www.tcgplayer.com/search/weiss-schwarz | HTML scrape / public endpoints | EN prices |
 | Bushiroad EN set pages | https://en.ws-tcg.com/products/ | HTML scrape | Official pull rate PDFs |
 | heartofthecards.com | https://www.heartofthecards.com/code/cardlist.html | HTML scrape | EN/JP catalog fallback |
-| WS tournament results | https://en.ws-tcg.com/events/ | HTML scrape | Competitive standing |
+| weissteatime.com tournaments | https://weissteatime.com/category/deck-lists/tournament-decks/ | HTML scrape | EN competitive results: Worlds, BCS, BSF; field %, top-cut, conversion rates |
+| Bushiroad EN events (fallback) | https://en.ws-tcg.com/events/ | HTML scrape | Official results; less aggregated than weissteatime |
 
 ---
 
@@ -340,6 +404,7 @@ See `DECISIONS.md` for full records.
 5. **Manual seed data for V1** EN pull rates and preorder prices — scraping historical PDF pull rates is fragile; we input the first batch manually and automate later. (WD-005)
 6. **Exclude AGR rarity from JP EV** — signed cards never appear in EN prints, would inflate EV unfairly. (WD-006)
 7. **Stage-tagged posts** — same set gets multiple posts (`preorder`, `30d`, `90d`, `1yr`) so we can track our prediction accuracy. (WD-007)
+8. **weissteatime.com for competitive meta** — community-authoritative source for EN Worlds/BCS/BSF results; captures field %, conversion rates, and multi-season trend needed for powercreep and missing-piece theses. (WD-010)
 
 ---
 
@@ -359,3 +424,10 @@ See `DECISIONS.md` for full records.
 | **Stage** | Phase of the analysis lifecycle: `preorder`, `release`, `30d`, `90d`, `1yr` |
 | **Preorder dip** | Price drop at or shortly after release as hype-buyers sell their pulls |
 | **Fire sale** | Mass selling by people who opened boxes and want to recoup immediately |
+| **Powercreep thesis** | In a non-rotating format, a new set for a top-tier IP strictly improves the existing deck, sustaining or increasing demand for the IP's cards across all prints |
+| **Missing piece thesis** | A mid-tier deck with high conversion efficiency but low field share may be one key card away from full viability; that card could arrive in a future release, driving retroactive demand for existing singles |
+| **Competitive tier** | Classification of an IP's tournament standing: `high`, `mid-high`, `mid`, `low`, `none` — derived from weissteatime field % and top-cut data across BCS/BSF/Worlds |
+| **Field %** | Percentage of tournament players who registered a given set as their primary deck |
+| **Conversion rate** | First-place finishes ÷ total entries for that set — high conversion at low field % signals an efficient/underplayed archetype |
+| **BCS** | Bushiroad Championship Series — the main EN regional circuit |
+| **BSF** | Bushiroad Spring Fest — EN store-level circuit feeding into BCS |
