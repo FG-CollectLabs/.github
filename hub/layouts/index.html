@@ -225,6 +225,22 @@
 
   <div class="card">
     <div class="card-header">
+      <div class="card-title">Card Inventory</div>
+      <span class="badge badge-live">live</span>
+    </div>
+    <div class="card-desc">Multi-tenant TCG card inventory manager. Track cards from box breaks, location (chaos-sort bins), listings, and sales. Firebase Google OAuth. eBay order CSV import.</div>
+    <div class="tech-row">
+      <span class="tech">Vite / React / TS</span><span class="tech">Firebase Auth</span><span class="tech">Cloudflare Tunnel</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://inventory.futuregadgetlabs.com" target="_blank">inventory.futuregadgetlabs.com</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/card-inventory-frontend" target="_blank">card-inventory-frontend</a></div>
+    </div>
+    <div class="cmd">cd card-inventory-frontend &amp;&amp; npm run dev</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
       <div class="card-title">WS Set Analysis Blog</div>
       <span class="badge badge-live">live</span>
     </div>
@@ -402,6 +418,24 @@
 
   <div class="card">
     <div class="card-header">
+      <div class="card-title">Card Inventory API</div>
+      <span class="badge badge-live">inventory-api.futuregadgetlabs.com</span>
+    </div>
+    <div class="card-desc">Go API for multi-tenant card inventory. Acquisitions (box breaks), locations (chaos-sort), listings, transactions, eBay order CSV import. Firebase JWT auth. PG on same LXC (docker-compose). LXC 111 on proxmox1.</div>
+    <div class="tech-row">
+      <span class="tech">Go</span><span class="tech">pgx</span>
+      <span class="tech">PostgreSQL 16 (docker)</span><span class="tech">Firebase Auth</span><span class="tech">Cloudflare Tunnel</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://inventory-api.futuregadgetlabs.com/healthz" target="_blank">inventory-api.futuregadgetlabs.com/healthz</a></div>
+      <div class="link-row"><span class="link-label">homelab</span><a href="http://192.168.86.201:8080/healthz" target="_blank">192.168.86.201:8080</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/card-inventory-backend" target="_blank">card-inventory-backend</a></div>
+    </div>
+    <div class="cmd">cd card-inventory-backend &amp;&amp; go run ./cmd/api</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
       <div class="card-title">Sellthrough Analyzer</div>
       <span class="badge badge-homelab">pipeline</span>
     </div>
@@ -441,21 +475,6 @@
 <!-- ── PLANNING ───────────────────────────────────────── -->
 <div class="section-label">In Planning</div>
 <div class="grid">
-
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">Card Inventory</div>
-      <span class="badge badge-plan">planning</span>
-    </div>
-    <div class="card-desc">Multi-tenant TCG inventory SaaS (SwiftSort competitor). Scan → inventory → transform (break/grade/crack/regrade) → list → analyze. Chaos-sort bin tracking, BQ analytics joined against market-tracker price history.</div>
-    <div class="tech-row">
-      <span class="tech">Go</span><span class="tech">Vite / TS</span>
-      <span class="tech">PostgreSQL (RLS)</span><span class="tech">BigQuery</span><span class="tech">GCS</span>
-    </div>
-    <div class="links">
-      <div class="link-row"><span class="link-label">plan</span><a href="https://github.com/FG-CollectLabs/.github/tree/main/projects/card-inventory" target="_blank">.github/projects/card-inventory/</a></div>
-    </div>
-  </div>
 
   <div class="card">
     <div class="card-header">
@@ -526,16 +545,19 @@
     └── Claude agent drives analysis + post generation
 
 
-<span class="hi">Planning</span>
+<span class="hi">Card Inventory</span>  <span class="grn">← live</span>
 
-  <span class="acc">card-inventory-backend</span>  ←──── <span class="hi">PostgreSQL</span> Proxmox · card_inventory DB
-    │  multi-tenant: inventory items, locations, acquisitions, transformations, listings
-    ├── calls  card-identifier-backend  (scan identification)
-    ├── calls  market-tracker-backend   (market price at acquisition)
-    └── nightly BQ export ──▶  card_inventory BQ dataset
-                               (joined against price_tracker for P&amp;L views)
-    frontend:  <span class="acc">card-inventory-frontend</span>  (Vite/TS)
-    scanner:   <span class="acc">card-inventory-scanner</span>   (Go folder-watcher)
+  <span class="acc">card-inventory-frontend</span>  (<span class="grn">inventory.futuregadgetlabs.com</span>  · Vite/React)
+    └── Firebase Google OAuth → Bearer token on every request
+    └── GET/POST /api/v1/*  ──▶  card-inventory-backend
+
+  <span class="acc">card-inventory-backend</span>  (<span class="grn">inventory-api.futuregadgetlabs.com</span>  · LXC 111 .201)
+    │  Firebase JWT verification (no service-account key)
+    │  multi-tenant RLS: inventory_items, locations, acquisitions, listings, transactions
+    ├── <span class="hi">PostgreSQL 16</span> (docker compose, same LXC)  ·  card_inventory DB
+    ├── will call  card-identifier-backend  (scan identification)
+    ├── will call  market-tracker-backend   (market price at acquisition)
+    └── nightly BQ export (planned) ──▶  card_inventory BQ dataset
 
   <span class="acc">graded-market-watch</span>  (inside market-tracker-backend)
     └── pop report scrapers, gem rate view, watchlist signals
@@ -573,10 +595,10 @@
       <td>cards (pHash fingerprints), scan_batches, scan_results</td>
     </tr>
     <tr>
-      <td>planning / Proxmox</td>
+      <td>192.168.86.201 (docker, LXC 111)</td>
       <td>card_inventory</td>
       <td>card-inventory-backend</td>
-      <td>orgs, inventory_items, locations, acquisitions, transactions, item_transformations</td>
+      <td>orgs, inventory_items, locations, acquisitions, transactions, listings, item_transformations</td>
     </tr>
     <tr>
       <td>BigQuery</td>
@@ -602,10 +624,12 @@
 
 <script>
 const CHECKS = [
-  { name: "EV Calculator",         url: "https://ev-calculator.futuregadgetlabs.com", health: null },
-  { name: "EV API",                url: "https://ev-api.futuregadgetlabs.com/healthz", health: null },
-  { name: "Card Identifier",       url: "https://cards.futuregadgetlabs.com/healthz",  health: null },
-  { name: "Market Tracker",        url: "https://market.futuregadgetlabs.com/healthz", health: null },
+  { name: "EV Calculator",         url: "https://ev-calculator.futuregadgetlabs.com",       health: null },
+  { name: "EV API",                url: "https://ev-api.futuregadgetlabs.com/healthz",       health: null },
+  { name: "Card Identifier",       url: "https://cards.futuregadgetlabs.com/healthz",        health: null },
+  { name: "Market Tracker",        url: "https://market.futuregadgetlabs.com/healthz",       health: null },
+  { name: "Card Inventory",        url: "https://inventory.futuregadgetlabs.com",            health: null },
+  { name: "Card Inventory API",    url: "https://inventory-api.futuregadgetlabs.com/healthz",health: null },
 ];
 
 async function checkOne(c) {

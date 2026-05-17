@@ -10,72 +10,72 @@
 
 ## 1. Repo & Infrastructure
 
-- [ ] W-001 Create `FG-CollectLabs/ws-set-analysis` GitHub repo
-- [ ] W-002 Initialize directory structure: `blog/`, `agents/`, `mcp/`, `seed-data/`
-- [ ] W-003 Scaffold Hugo site in `blog/` with a readable theme (PaperMod or similar)
-- [ ] W-004 Configure Hugo: `baseURL`, `languageCode`, section `sets/`, taxonomies (`recommendation`, `stage`, `ip`)
-- [ ] W-005 Set up GitHub Actions: Hugo build → deploy to GitHub Pages on push to `main`
-- [ ] W-006 Write `CLAUDE.md` for the repo with conventions (Python venv, Hugo build command, agent entry points)
-- [ ] W-007 Set up Python virtual environment spec (`pyproject.toml` or `requirements.txt`): `anthropic`, `httpx`, `requests`, `beautifulsoup4`, `mcp`
+- [x] W-001 Create `FG-CollectLabs/ws-set-analysis` GitHub repo  (commit: 415f9d4)
+- [x] W-002 Initialize directory structure: `blog/`, `agents/`, `mcp/`, `seed-data/`  (commit: 415f9d4)
+- [x] W-003 Scaffold Hugo site in `blog/` with a readable theme (PaperMod or similar)  (commit: 415f9d4)
+- [x] W-004 Configure Hugo: `baseURL`, `languageCode`, section `sets/`, taxonomies (`recommendation`, `stage`, `ip`)  (commit: 415f9d4)
+- [x] W-005 Set up GitHub Actions: Hugo build → deploy to GitHub Pages on push to `main`  (commit: 415f9d4)
+- [x] W-006 Write `CLAUDE.md` for the repo with conventions (Python venv, Hugo build command, agent entry points)  (commit: 415f9d4)
+- [x] W-007 Set up Python virtual environment spec (`pyproject.toml` or `requirements.txt`): `anthropic`, `httpx`, `requests`, `beautifulsoup4`, `mcp`  (commit: 415f9d4)
 
 ## 2. MCP Server — `mcp-jikan`
 
-- [ ] W-020 Scaffold `mcp/jikan/server.py` using the MCP Python SDK
-- [ ] W-021 Implement `get_anime(mal_id: int)` tool — fetches from `api.jikan.moe/v4/anime/{id}`; returns rank, score, members, favorites, popularity, status, episodes
-- [ ] W-022 Implement `get_manga(mal_id: int)` tool — same shape for manga
-- [ ] W-023 Implement `search_anime(query: str)` and `search_manga(query: str)` tools
-- [ ] W-024 Add 400ms inter-request sleep to respect Jikan rate limits
-- [ ] W-025 Write `mcp/jikan/README.md`: how to run locally, tool list, example output
-- [ ] W-026 Test: fetch RE:Zero anime (id=31240) and RE:Zero manga (id=74697) — validate output shape
+- [x] W-020 Scaffold `mcp/jikan/server.py` using the MCP Python SDK  (commit: 415f9d4)
+- [x] W-021 Implement `get_anime(mal_id: int)` tool — fetches from `api.jikan.moe/v4/anime/{id}`; returns rank, score, members, favorites, popularity, status, episodes  (commit: 415f9d4)
+- [x] W-022 Implement `get_manga(mal_id: int)` tool — same shape for manga  (commit: 415f9d4)
+- [x] W-023 Implement `search_anime(query: str)` and `search_manga(query: str)` tools  (commit: 415f9d4)
+- [x] W-024 Add 400ms inter-request sleep to respect Jikan rate limits  (commit: 415f9d4)
+- [-] W-025 Write `mcp/jikan/README.md`: how to run locally, tool list, example output — usage docs in CLAUDE.md instead
+- [x] W-026 Test: fetch RE:Zero anime (id=31240) and RE:Zero manga (id=74697) — validate output shape  (run: 2026-05-10, results in debug JSON)
 
 ## 3. MCP Server — `mcp-yuyutei`
 
-- [ ] W-040 Research Yuyutei URL structure for WS set listings (https://yuyu-tei.jp/game_ws/sell/list.php)
-- [ ] W-041 Scaffold `mcp/yuyutei/server.py`
-- [ ] W-042 Implement `search_set(query: str)` — scrape set listing page, return set names + IDs
-- [ ] W-043 Implement `get_set_cards(set_id: str)` — scrape card listing for a set; return rarity, name, buy price, sell price
-- [ ] W-044 Implement `get_set_summary(set_id: str)` — compute rarity breakdown, top-10 by price, EV per box; exclude AGR rarities from EV
-- [ ] W-045 Add 24h file cache: write JSON to `seed-data/jp-sets/<set_id>.json`; skip re-scrape if fresh
-- [ ] W-046 Write `mcp/yuyutei/README.md`
-- [ ] W-047 Test: fetch Re:Zero Vol.3 JP set, validate card list and EV output
+- [x] W-040 Research Yuyutei URL structure for WS set listings  (commit: 415f9d4)
+- [x] W-041 Scaffold `mcp/yuyutei/server.py`  (commit: 415f9d4)
+- [x] W-042 Implement `search_set(query: str)` — scrape set listing page, return set names + IDs  (commit: 415f9d4)
+- [x] W-043 Implement `get_set_cards(set_id: str)` — scrape card listing for a set; return rarity, name, buy price, sell price  (commit: 415f9d4)
+- [x] W-044 Implement `get_set_summary(set_id: str)` — compute rarity breakdown, top-10 by price, EV per box; exclude AGR rarities from EV  (commit: 415f9d4)
+- [x] W-045 Add 24h file cache: write JSON to `seed-data/jp-sets/<set_id>.json`; skip re-scrape if fresh  (commit: 415f9d4)
+- [-] W-046 Write `mcp/yuyutei/README.md` — usage docs in CLAUDE.md instead
+- [x] W-047 Test: fetch Re:Zero Vol.3 JP set, validate card list and EV output  (run: 2026-05-10, results in seed-data/jp-sets/RZ_S116.json)
 
 ## 4. MCP Server — `mcp-ws-prices`
 
-- [ ] W-060 Research TCGPlayer URL structure for WS card/box prices; identify if public price endpoints are usable (decide WD-009)
-- [ ] W-061 Scaffold `mcp/ws-prices/server.py`
-- [ ] W-062 Implement `get_box_price(set_name: str)` — returns current sealed booster box market price on TCGPlayer
-- [ ] W-063 Implement `get_card_price(card_name: str, set_name: str)` — market, low, high prices
-- [ ] W-064 Implement `get_set_summary(set_name: str)` — top 10 cards by price per set, SP/SSP average
-- [ ] W-065 Add user-agent header + respectful rate limiting
-- [ ] W-066 Write `mcp/ws-prices/README.md`
-- [ ] W-067 Test: fetch current box prices for Re:Zero Vol.1 and Vol.2 EN sets
+- [x] W-060 Research TCGPlayer URL structure — decided Playwright scrape (WD-009 resolved: Playwright)  (commit: 415f9d4)
+- [x] W-061 Scaffold `mcp/ws-prices/server.py`  (commit: 415f9d4)
+- [x] W-062 Implement `get_box_price(set_name: str)` — returns current sealed booster box market price on TCGPlayer  (commit: 415f9d4)
+- [x] W-063 Implement `get_card_price(card_name: str, set_name: str)` — market, low, high prices  (commit: 415f9d4)
+- [x] W-064 Implement `get_set_summary(set_name: str)` — top 10 cards by price per set, SP/SSP average  (commit: 415f9d4)
+- [x] W-065 Add user-agent header + respectful rate limiting  (commit: 415f9d4)
+- [-] W-066 Write `mcp/ws-prices/README.md` — usage docs in CLAUDE.md instead
+- [x] W-067 Test: fetch current box prices for Re:Zero Vol.1 and Vol.2 EN sets  (run: 2026-05-10)
 
 ## 5. Seed Data — RE:Zero EN Sets
 
-- [ ] W-080 Research and input `seed-data/en-sets/rezero-vol1.json`: release date (2018-07-27), preorder price, pull rates (SP, SSP, RRR, RR, R), competitive standing
-- [ ] W-081 Research and input `seed-data/en-sets/rezero-vol2.json`
-- [ ] W-082 Research and input `seed-data/en-sets/rezero-memory-snow.json`
-- [ ] W-083 Research and input `seed-data/en-sets/rezero-frozen-bond.json`
-- [ ] W-084 Create `agents/sets/rezero-vol3.json` — set config file (MAL IDs, EN set list, JP set references)
-- [ ] W-085 Identify Yuyutei set IDs for all 5 JP RE:Zero sets (Vol.1-3, Memory Snow, Frozen Bond) and populate jp_equivalent_sets in the config
+- [x] W-080 Research and input `seed-data/en-sets/rezero-vol1.json`  (commit: 415f9d4)
+- [x] W-081 Research and input `seed-data/en-sets/rezero-vol2.json`  (commit: 415f9d4)
+- [x] W-082 Research and input `seed-data/en-sets/rezero-memory-snow.json`  (commit: 415f9d4)
+- [x] W-083 Research and input `seed-data/en-sets/rezero-frozen-bond.json`  (commit: 415f9d4)
+- [x] W-084 Create `agents/sets/rezero-vol3.json` — set config file (MAL IDs, EN set list, JP set references)  (commit: 415f9d4)
+- [x] W-085 Identify Yuyutei set codes for all 5 JP RE:Zero sets (Vol.1-3, Memory Snow, Frozen Bond) — RZ/S46, RZ/S55, RZ/S68, RZ/SE35, RZ/S116  (commit: 415f9d4)
 
 ## 6. Analysis Agent — Core
 
-- [ ] W-100 Scaffold `agents/preorder/run.py`: CLI entry point, loads set config, orchestrates sub-agents
-- [ ] W-101 Implement `agents/preorder/ip_strength.py`: call mcp-jikan tools, compute IP score, handle unranked fallback
-- [ ] W-102 Implement `agents/preorder/en_historical.py`: load seed data, call mcp-ws-prices for current prices, compute % change and elapsed time
-- [ ] W-103 Implement `agents/preorder/jp_set_analysis.py`: call mcp-yuyutei, process full JP card list, compute EV excluding AGR
-- [ ] W-104 Implement `agents/preorder/synthesis.py`: apply V1 recommendation heuristics (see ARCHITECTURE.md), produce structured recommendation dict
-- [ ] W-105 Implement `agents/preorder/post_generator.py`: take structured data dict, render Hugo-compatible markdown with front matter and section template
-- [ ] W-106 Write `agents/preorder/README.md`: full docs for running the agent, extending it, interpreting output
-- [ ] W-107 Test end-to-end dry run: does it produce a valid Hugo markdown file?
+- [x] W-100 Scaffold `agents/preorder/run.py`: CLI entry point, loads set config, orchestrates sub-agents  (commit: 415f9d4)
+- [x] W-101 Implement `agents/preorder/ip_strength.py`: call mcp-jikan tools, compute IP score, handle unranked fallback  (commit: 415f9d4)
+- [x] W-102 Implement `agents/preorder/en_historical.py`: load seed data, call mcp-ws-prices for current prices, compute % change and elapsed time  (commit: 415f9d4)
+- [x] W-103 Implement `agents/preorder/jp_set_analysis.py`: call mcp-yuyutei, process full JP card list, compute EV excluding AGR  (commit: 415f9d4)
+- [x] W-104 Implement `agents/preorder/synthesis.py`: apply V1 recommendation heuristics, produce structured recommendation dict  (commit: 415f9d4)
+- [x] W-105 Implement `agents/preorder/post_generator.py`: render Hugo-compatible markdown with front matter  (commit: 415f9d4)
+- [-] W-106 Write `agents/preorder/README.md` — usage docs in CLAUDE.md instead
+- [x] W-107 Test end-to-end dry run: does it produce a valid Hugo markdown file?  (run: 2026-05-10 ✓)
 
 ## 7. First Analysis — RE:Zero Vol.3
 
-- [ ] W-120 Run preorder analysis agent: `python agents/preorder/run.py rezero-vol3`
-- [ ] W-121 Review generated post in `blog/content/sets/rezero-vol3/preorder.md`
+- [x] W-120 Run preorder analysis agent: `python agents/preorder/run.py rezero-vol3`  (run: 2026-05-10)
+- [x] W-121 Review generated post in `blog/content/sets/rezero-vol3/preorder.md`  (done: 2026-05-10)
 - [ ] W-122 Manual edit pass: verify all data points are accurate, add any commentary the agent missed
-- [ ] W-123 Commit + push post; verify Hugo builds and renders correctly on GitHub Pages
+- [x] W-123 Commit + push post; verify Hugo builds and renders correctly on GitHub Pages  (live: https://fg-collectlabs.github.io/ws-set-analysis/)
 - [ ] W-124 Post-run retrospective: what data was missing? what needed manual correction? → file issues for agent improvements
 
 ## 8. Refinement (post first analysis)
