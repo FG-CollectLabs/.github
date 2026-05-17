@@ -165,6 +165,35 @@
       color: var(--muted);
       font-size: 11px;
     }
+
+    /* health checks */
+    .health-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+      background: var(--gray);
+    }
+    .health-dot.up   { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .health-dot.down { background: #f85149; box-shadow: 0 0 6px #f85149; }
+    .health-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-bottom: 1px solid #1c2128;
+    }
+    .health-row:last-child { border-bottom: none; }
+    .health-name { flex: 1; font-size: 12px; }
+    .health-url  { color: var(--muted); font-size: 11px; }
+    .health-ms   { color: var(--muted); font-size: 11px; width: 55px; text-align: right; }
+    .health-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; overflow: hidden;
+    }
+    .health-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; border-bottom: 1px solid var(--border);
+      font-size: 11px; color: var(--muted);
+    }
+    #health-refresh { background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--muted); cursor: pointer; font-size: 10px; padding: 2px 8px; }
+    #health-refresh:hover { color: var(--accent); border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -177,6 +206,18 @@
     <a href="https://github.com/FG-CollectShop" target="_blank">FG-CollectShop</a>
   </div>
 </header>
+
+<!-- ── HEALTH ──────────────────────────────────────────── -->
+<div class="section-label">Health Checks</div>
+<div class="health-panel">
+  <div class="health-header">
+    <span>Public endpoints — checked on load</span>
+    <button id="health-refresh">↻ Refresh</button>
+  </div>
+  <div id="health-list">
+    <!-- populated by JS -->
+  </div>
+</div>
 
 <!-- ── LIVE / DEPLOYED ─────────────────────────────────── -->
 <div class="section-label">Live &amp; Deployed</div>
@@ -234,15 +275,15 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">EV Calculator Frontend</div>
-      <span class="badge badge-local">local :1313</span>
+      <span class="badge badge-live">live</span>
     </div>
-    <div class="card-desc">Hugo frontend for sealed product EV calculator. Commander precon cases ranked by EV. Fetches live prices from the Go API at :8081, which in turn calls market-tracker-backend.</div>
+    <div class="card-desc">Hugo frontend for sealed product EV calculator. Commander precon cases ranked by EV. Firebase Google OAuth (nguye208@gmail.com). Fetches live prices from ev-api.</div>
     <div class="tech-row">
-      <span class="tech">Hugo</span><span class="tech">Vanilla JS</span>
+      <span class="tech">Hugo</span><span class="tech">Vanilla JS</span><span class="tech">Firebase Auth</span><span class="tech">GitHub Pages</span>
     </div>
     <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://ev-calculator.futuregadgetlabs.com" target="_blank">ev-calculator.futuregadgetlabs.com</a></div>
       <div class="link-row"><span class="link-label">local</span><a href="http://localhost:1313" target="_blank">localhost:1313</a></div>
-      <div class="link-row"><span class="link-label">api</span><a href="http://localhost:8081" target="_blank">localhost:8081</a></div>
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/ev-calculator" target="_blank">ev-calculator</a></div>
     </div>
     <div class="cmd">cd ev-calculator/frontend &amp;&amp; hugo serve</div>
@@ -326,13 +367,15 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">EV Calculator API</div>
-      <span class="badge badge-local">local :8081</span>
+      <span class="badge badge-homelab">ev-api.futuregadgetlabs.com</span>
     </div>
-    <div class="card-desc">Go HTTP API serving sealed product EV reports. Reads YAML deck configs from disk. Pulls live prices from market-tracker (TCGCSV fallback). Also proxies card-identifier for scan uploads.</div>
+    <div class="card-desc">Go HTTP API serving sealed product EV reports. Reads YAML deck configs from disk. Pulls live prices from market-tracker (TCGCSV fallback). Proxies card-identifier for scan uploads. Image proxy for TCGPlayer CDN.</div>
     <div class="tech-row">
-      <span class="tech">Go</span><span class="tech">YAML</span>
+      <span class="tech">Go</span><span class="tech">YAML</span><span class="tech">Cloudflare Tunnel</span>
     </div>
     <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://ev-api.futuregadgetlabs.com/healthz" target="_blank">ev-api.futuregadgetlabs.com</a></div>
+      <div class="link-row"><span class="link-label">docs</span><a href="https://ev-api.futuregadgetlabs.com/docs" target="_blank">ev-api.futuregadgetlabs.com/docs</a></div>
       <div class="link-row"><span class="link-label">local</span><a href="http://localhost:8081/healthz" target="_blank">localhost:8081</a></div>
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/ev-calculator" target="_blank">ev-calculator</a></div>
     </div>
@@ -557,5 +600,46 @@
   <a href="https://github.com/FG-CollectLabs/.github" target="_blank" style="color:var(--muted);">source</a>
 </footer>
 
+<script>
+const CHECKS = [
+  { name: "EV Calculator",         url: "https://ev-calculator.futuregadgetlabs.com", health: null },
+  { name: "EV API",                url: "https://ev-api.futuregadgetlabs.com/healthz", health: null },
+  { name: "Card Identifier",       url: "https://cards.futuregadgetlabs.com/healthz",  health: null },
+  { name: "Market Tracker",        url: "https://market.futuregadgetlabs.com/healthz", health: null },
+];
+
+async function checkOne(c) {
+  const t0 = performance.now();
+  try {
+    const r = await fetch(c.url, { method: "GET", signal: AbortSignal.timeout(6000) });
+    return { up: r.ok || r.status === 401, ms: Math.round(performance.now() - t0) };
+  } catch {
+    return { up: false, ms: null };
+  }
+}
+
+async function runChecks() {
+  const list = document.getElementById("health-list");
+  list.innerHTML = CHECKS.map(c =>
+    `<div class="health-row" id="hc-${c.name.replace(/\s+/g,'-')}">
+       <span class="health-dot"></span>
+       <span class="health-name">${c.name}</span>
+       <span class="health-url">${c.url.replace(/https?:\/\//,'')}</span>
+       <span class="health-ms">…</span>
+     </div>`
+  ).join("");
+
+  await Promise.all(CHECKS.map(async c => {
+    const r = await checkOne(c);
+    const row = document.getElementById("hc-" + c.name.replace(/\s+/g,'-'));
+    if (!row) return;
+    row.querySelector(".health-dot").className = "health-dot " + (r.up ? "up" : "down");
+    row.querySelector(".health-ms").textContent = r.ms != null ? r.ms + " ms" : "timeout";
+  }));
+}
+
+document.getElementById("health-refresh").addEventListener("click", runChecks);
+runChecks();
+</script>
 </body>
 </html>
