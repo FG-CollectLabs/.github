@@ -3,6 +3,8 @@
 Data collection and analysis tools for the TCG ecosystem — v2 of the
 [FutureGadgetCollections](https://github.com/FutureGadgetCollections) toolkit.
 
+**[→ EV Calculator](https://fg-collectlabs.github.io/ev-calculator/)** — live sealed product expected value tool
+
 ## What this org is
 
 FG-CollectLabs is the lab. It's where pricing, inventory, sell-through, and
