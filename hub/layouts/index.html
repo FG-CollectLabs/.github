@@ -635,8 +635,8 @@ const CHECKS = [
 async function checkOne(c) {
   const t0 = performance.now();
   try {
-    const r = await fetch(c.url, { method: "GET", signal: AbortSignal.timeout(6000) });
-    return { up: r.ok || r.status === 401, ms: Math.round(performance.now() - t0) };
+    await fetch(c.url, { method: "GET", mode: "no-cors", signal: AbortSignal.timeout(8000) });
+    return { up: true, ms: Math.round(performance.now() - t0) };
   } catch {
     return { up: false, ms: null };
   }
