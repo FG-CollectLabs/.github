@@ -292,7 +292,7 @@
       <div class="card-title">Market Tracker Frontend</div>
       <span class="badge badge-local">local :5175</span>
     </div>
-    <div class="card-desc">Dark SPA for TCG market price tracking. Sets index, set detail (market / cards / sealed / graded ROI tabs), card price history, graded coverage.</div>
+    <div class="card-desc">Dark SPA for TCG market price tracking. Sets index, set detail (market / cards / sealed / graded ROI tabs), card price history, graded coverage. Code complete — not yet deployed (waiting on backend LXC + Cloudflare Tunnel).</div>
     <div class="tech-row">
       <span class="tech">Vite</span><span class="tech">React 18</span>
       <span class="tech">TypeScript</span><span class="tech">Tailwind v3</span>
@@ -365,15 +365,15 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Market Tracker Backend</div>
-      <span class="badge badge-homelab">192.168.86.182:8080</span>
+      <span class="badge badge-plan">needs LXC deploy</span>
     </div>
-    <div class="card-desc">Go API + PostgreSQL for weekly TCG market prices. Catalog reads, price snapshots, graded data, BQ/GCS sync. Central price oracle for EV calculator and card-inventory.</div>
+    <div class="card-desc">Go API + PostgreSQL for weekly TCG market prices. Catalog reads, price snapshots, graded data, listing depth, eBay sold, BQ/GCS sync. Central price oracle for EV calculator and card-inventory. Code complete — LXC 109 (192.168.86.199) not yet provisioned.</div>
     <div class="tech-row">
       <span class="tech">Go</span><span class="tech">pgx / sqlc</span>
       <span class="tech">PostgreSQL</span><span class="tech">BigQuery</span><span class="tech">GCS</span>
     </div>
     <div class="links">
-      <div class="link-row"><span class="link-label">homelab</span><a href="http://192.168.86.182:8080/healthz" target="_blank">192.168.86.182:8080</a></div>
+      <div class="link-row"><span class="link-label">target</span><a href="http://192.168.86.199:8080/healthz" target="_blank">192.168.86.199:8080</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">(LXC 109 — not provisioned)</span></div>
       <div class="link-row"><span class="link-label">local</span><a href="http://localhost:8080/healthz" target="_blank">localhost:8080</a></div>
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/market-tracker-backend" target="_blank">market-tracker-backend</a></div>
     </div>
@@ -627,7 +627,7 @@ const CHECKS = [
   { name: "EV Calculator",         url: "https://ev-calculator.futuregadgetlabs.com",       health: null },
   { name: "EV API",                url: "https://ev-api.futuregadgetlabs.com/healthz",       health: null },
   { name: "Card Identifier",       url: "https://cards.futuregadgetlabs.com/healthz",        health: null },
-  { name: "Market Tracker",        url: "https://market.futuregadgetlabs.com/healthz",       health: null },
+  { name: "Market Tracker",        url: "http://192.168.86.199:8080/healthz",                health: null },
   { name: "Card Inventory",        url: "https://inventory.futuregadgetlabs.com",            health: null },
   { name: "Card Inventory API",    url: "https://inventory-api.futuregadgetlabs.com/healthz",health: null },
 ];

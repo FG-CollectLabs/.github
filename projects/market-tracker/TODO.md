@@ -1,160 +1,161 @@
 # Market Tracker V2 — TODO
 
-Goal: V2 live on Proxmox, data flowing from sellthrough-analyzer, V1 decommissioned.
+Goal: V2 live on Proxmox, data flowing weekly, frontend deployed.
+
+Last audited: 2026-05-18
 
 ---
 
-## Phase 1 — Deploy backend to Proxmox (TODAY)
+## What's actually built (as of 2026-05-18)
 
-### Already done
-- [x] DB `market_tracker` created on 192.168.86.182
-- [x] Migrations 0001–0005 applied
-- [x] `fg_app` granted schema permissions
-- [x] `Dockerfile` written
-- [x] GitHub Actions CI written (`.github/workflows/docker.yml`)
-- [x] `deploy.sh` written (targets 192.168.86.199 by default)
-- [x] `deploy/env.production.example` written
-- [x] `scripts/gen_prod_env.ps1` written — generates /etc/market-tracker/env from local secrets
-- [x] GitHub repo created at https://github.com/FG-CollectLabs/market-tracker-backend
-- [x] `philwin/market-tracker-backend:latest` built and pushed to Docker Hub
+### Backend (`market-tracker-backend`)
+- [x] Migrations 0001–0008 applied to `market_tracker` DB on 192.168.86.182
+- [x] All API routes wired — no 501s: catalog, snapshots, market, listing-depth, graded, prices
+- [x] `cmd/ingest-depth` — TCGPlayer + Manapool listing depth snapshots
+- [x] `cmd/ingest-prices` — weekly prices via TCGCSV + Manapool
+- [x] `cmd/ingest-ebay-scrape` — self-hosted eBay sold scraper (replaces Apify)
+- [x] `cmd/ingest-listings` — per-seller listing snapshots
+- [x] `cmd/seed` — Scryfall-backed catalog seeder
+- [x] `cmd/sync` — BQ + GCS export skeleton
+- [x] `.github/workflows/docker.yml` — builds + pushes `philwin/market-tracker-backend:latest` on merge to master
+- [x] `.github/workflows/ingest.yml` — weekly Sunday cron (depth → prices → ebay → listings) on self-hosted runner
+- [x] `deploy.sh` + `deploy/env.production.example` ready
 
-### Already done
-- [x] GitHub repo created: https://github.com/FG-CollectLabs/market-tracker-backend
-- [x] Dockerfile, CI workflow, deploy.sh committed and pushed
-- [x] DOCKERHUB_TOKEN repo secret set → CI building `philwin/market-tracker-backend:latest`
-- [x] `infra.json` updated with proposed LXC details (id=109, ip=192.168.86.199, name=fg-market-app)
+### Frontend (`market-tracker-frontend`)
+- [x] Vite + React 18 + TypeScript + Tailwind SPA at port 5175
+- [x] SetsPage (`/`) — fetches `/v1/sets`, grouped by game
+- [x] SetDetailPage (`/sets/:game/:code`) — 4 tabs: Market, Cards, Sealed, Graded ROI
+- [x] CardDetailPage (`/cards/:displayKey`) — Price History + Graded tabs
+- [x] GradedCoveragePage (`/graded`) — coverage matrix across all sets
+- [x] Full API client (`lib/api.ts`) — 17 functions covering all backend endpoints
+- [x] Dev proxy: `/v1` → `$VITE_API_URL` (default `localhost:8080`)
 
-### Still needed
+---
 
-- [ ] **Provision LXC on Proxmox** for market-tracker-backend
-  - LXC 109 on proxmox1, IP 192.168.86.199, name `fg-market-app`
-  - 1 CPU, 512MB RAM, 4GB disk — same spec as fg-card-app
-  - Install Docker inside it: `apt install -y docker.io`
-  - Append SSH key to `/root/.ssh/authorized_keys` inside the LXC
+## Blocking: nothing is actually live
+
+The API is not reachable (`192.168.86.199` not provisioned, `192.168.86.182:8080` not responding).
+Ingest jobs are configured but have never successfully run. No catalog data exists.
+
+---
+
+## Phase 1 — Get the API running (main blocker)
+
+- [ ] **Provision LXC 109 on proxmox1**
+  - IP: 192.168.86.199, name: `fg-market-app`
+  - 1 CPU, 512 MB RAM, 4 GB disk
+  - `apt install -y docker.io`
+  - Append SSH key to `/root/.ssh/authorized_keys`
 
 - [ ] **Create env file on LXC**
   ```bash
   mkdir -p /etc/market-tracker
-  # Copy deploy/env.production.example → /etc/market-tracker/env
-  # Fill in: DATABASE_URL (real password from pg-servers.json), ADMIN_API_TOKEN (openssl rand -hex 32)
+  # Fill in DATABASE_URL, ADMIN_API_TOKEN from pg-servers.json + openssl rand -hex 32
   ```
 
-- [ ] **Run deploy**: `cd market-tracker-backend && ./deploy.sh`
+- [ ] **Deploy**: `cd market-tracker-backend && ./deploy.sh`
 
-- [ ] **Verify**: `curl http://192.168.86.199:8080/healthz` → `ok`
-                   `curl http://192.168.86.199:8080/readyz` → `ready`
-
----
-
-## Phase 2 — Seed catalog (SOC + SOS + Bloomburrow + Final Fantasy)
-
-The V1 `collection-market-tracker-data` repo has `add_soc_cards.py` and
-`single-cards.json` / `sealed-products.json` as a reference for the catalog shape.
-V2 ingest is via `POST /v1/admin/cards` + `/v1/admin/cards/external-ids`.
-
-- [ ] **Seed catalog via `cmd/seed`** (uses Scryfall — no script needed)
-  ```bash
-  DATABASE_URL="postgres://fg_app:<password>@192.168.86.182:5432/market_tracker?sslmode=disable" \
-    go run ./cmd/seed --sets blc,ffc,soc,sos
+- [ ] **Verify**:
   ```
-  Or exec into the running container: `docker exec market-tracker-backend /bin/seed --sets blc,ffc,soc,sos`
-- [ ] Run seed for SOC (Secrets of Strixhaven Commander)
-- [ ] Run seed for SOS (Secrets of Strixhaven play boosters)
-- [ ] Run seed for BLC (Bloomburrow Commander)
-- [ ] Run seed for FFC (Final Fantasy Commander)
-- [ ] Verify via `GET /v1/sets` that all four sets appear
+  curl http://192.168.86.199:8080/healthz  → ok
+  curl http://192.168.86.199:8080/readyz   → ready
+  ```
 
 ---
 
-## Phase 3 — Wire sellthrough-analyzer → V2 backend
+## Phase 2 — Seed catalog
 
-The `BackendAPIClient` in `sellthrough-analyzer/src/sellthrough/storage/backend_api.py`
-is already written. The blockers are the source adapters.
+Run against the DB directly (no live API required):
 
-- [ ] **Implement TCGPlayer adapter** (`sources/tcgplayer.py`)
-  - Weekly price snapshot per card: market price, median, lowest, listed quantity
-  - Output: list of `CardSnapshotRow` objects
-- [ ] **Implement ManaPool adapter** (`sources/manapool.py` — new file)
-  - Lowest asking price per card
-- [ ] **Implement eBay adapter** (`sources/ebay.py`)
-  - Sold-listing median + sample size (scrape or Finding API)
-- [ ] **Wire CLI command** `sellthrough ingest` in `cli.py`
-  - Read product list from `catalog/products.py`
-  - Fan out to adapters
-  - POST to backend via `BackendAPIClient`
-- [ ] **Run first ingest manually** against the running Proxmox backend
-- [ ] **Schedule weekly GitHub Actions cron** (`.github/workflows/ingest.yml` — scaffold exists,
-      needs `MARKET_TRACKER_API_URL` + `MARKET_TRACKER_API_TOKEN` repo secrets)
+```bash
+DATABASE_URL="postgres://fg_app:<pw>@192.168.86.182:5432/market_tracker?sslmode=disable" \
+  go run ./cmd/seed --sets soc,sos,blc,ffc,ltc,tmc,fic,lcc,tdc,eoc,aetherdrift
+```
+
+- [ ] Seed SOC (Secrets of Strixhaven Commander)
+- [ ] Seed SOS (Secrets of Strixhaven play boosters)
+- [ ] Seed BLC (Bloomburrow Commander)
+- [ ] Seed FFC (Final Fantasy Commander)
+- [ ] Seed remaining EV calculator sets: ltc, tmc, fic, lcc, tdc, eoc, aetherdrift
+- [ ] Verify: `GET /v1/sets` returns all seeded sets
 
 ---
 
-## Phase 4 — Migrate V1 historical data
+## Phase 3 — Run first ingest
 
-V1 price history lives in:
-- `collection-market-tracker-data/data/tcgplayer-price-history.json` — TCGPlayer weekly history
-- `collection-market-tracker-data/data/manapool-latest-prices.json` — ManaPool latest
-- V1 BigQuery tables (if we want full history beyond what's in the JSON files)
+With the API live and catalog seeded, trigger ingest manually via GitHub Actions
+(`workflow_dispatch`) or run containers directly:
 
-Script: `market-tracker-backend/scripts/migrate_v1.py`
+```bash
+docker run --rm --env-file /etc/market-tracker/env \
+  philwin/market-tracker-backend:latest /bin/ingest-prices
+```
 
-- [ ] Inspect V1 JSON format: `single-cards.json`, `tcgplayer-price-history.json`
-- [ ] Map V1 card IDs → V2 `display_key` (via TCGPlayer product ID in `card_external_ids`)
-- [ ] Run migration: reads V1 JSON → POST to `/v1/admin/cards/snapshots/bulk`
+- [ ] Run `ingest-depth` manually — verify listing depth rows written
+- [ ] Run `ingest-prices` manually — verify price snapshots in DB
+- [ ] Run `ingest-ebay-scrape` manually — verify eBay sold rows
+- [ ] Confirm weekly cron fires on self-hosted runner (check Actions tab after next Sunday)
+- [ ] Set `MARKET_TRACKER_API_URL` + `MARKET_TRACKER_API_TOKEN` as repo secrets if ingest POSTs to API
+
+---
+
+## Phase 4 — Deploy frontend
+
+- [ ] Add `.github/workflows/deploy.yml` to `market-tracker-frontend`
+  - Build: `npm run build`
+  - Deploy to GitHub Pages (or Cloudflare Pages)
+  - Set `VITE_API_URL` to `http://192.168.86.199:8080` (or public tunnel URL)
+- [ ] Expose API via Cloudflare Tunnel: `market-tracker.futuregadgetlabs.com` → 192.168.86.199:8080
+- [ ] Verify frontend loads sets from live API at the public domain
+
+---
+
+## Phase 5 — Migrate V1 historical data (optional, not blocking)
+
+V1 price history lives in `FutureGadgetCollections/collection-market-tracker-data`:
+- `data/tcgplayer-price-history.json`
+- `data/manapool-latest-prices.json`
+
+Script stub: `market-tracker-backend/scripts/migrate_v1.py`
+
+- [ ] Map V1 card IDs → V2 `display_key` via `card_external_ids` (TCGPlayer product ID)
+- [ ] POST to `/v1/admin/cards/snapshots/bulk`
 - [ ] Verify snapshot count via `GET /v1/cards/{key}/snapshots`
 
 ---
 
-## Phase 5 — Decommission V1
+## Phase 6 — Decommission V1
 
-- [ ] **Stop V1 Cloud Run jobs** (sync-prices + sync-feeds)
-  - GCP Console → Cloud Scheduler → disable both triggers
-  - Cloud Run → delete or set min-instances=0
-- [ ] **Verify card-identifier-backend still works** — it calls market-tracker at
-      `http://192.168.86.182:8080` (old address); update its `MARKET_TRACKER_URL`
-      to point at V2 once V2 is live: `http://192.168.86.199:8080`
-- [ ] **Archive V1 repos** in GitHub (Settings → Archive) after confirming V2 has all data:
+- [ ] Verify card-identifier-backend `MARKET_TRACKER_URL` points at V2 (192.168.86.199:8080)
+- [ ] Stop V1 Cloud Run jobs (GCP Console → Cloud Scheduler → disable)
+- [ ] Archive V1 repos:
   - `FutureGadgetCollections/collection-market-tracker-backend`
   - `FutureGadgetCollections/collection-market-tracker-data`
   - `FutureGadgetCollections/collection-market-tracker-frontend-admin`
-- [ ] **Update infra.json** — change market-tracker status from `running-on-laptop` to `running`
+- [ ] Update `infra.json` — market-tracker status `running-on-laptop` → `running`
 
 ---
 
-## Phase 6 — Frontend (not blocking V1 decommission)
-
-- [ ] Stand up Hugo frontend (`market-tracker-frontend` repo — not yet created)
-- [ ] Wire Google sign-in for admin writes
-- [ ] Public read view: set browser, card price history charts
-- [ ] Deploy via Cloudflare Tunnel or reverse proxy for `market-tracker.futuregadgetlabs.com`
-
----
-
-## Sync workers (BQ + GCS — not blocking)
-
-- [ ] Implement `cmd/sync bigquery` — weekly PG → BQ append
-- [ ] Implement `cmd/sync gcs` — weekly JSON bake to GCS bucket
-- [ ] Deploy as Cloud Run Jobs + Cloud Scheduler
-- [ ] Network path: Cloud Run → Tailscale/tunnel → home-lab PG (method TBD)
-
----
-
-## Phase 7 — Cloud migration + multi-tier deployment (future)
-
-Target architecture once ready to move off home lab:
+## Phase 7 — Cloud migration (future, when homelab isn't enough)
 
 | Tier | Database | Backend | Frontend |
 |---|---|---|---|
-| Prod | Neon `main` branch | Cloud Run | GitHub Pages (`main`) |
-| Preprod | Neon branch (instant, no sync needed) | Proxmox LXC | Proxmox nginx |
-| Demo | Neon branch | Cloud Run (separate service) | Cloudflare Pages preview |
-| Home lab PG | Nightly `pg_dump` from Neon — DR backup only | — | — |
+| Prod | Neon `main` | Cloud Run `:latest` | GitHub Pages |
+| Preprod | Neon branch | Proxmox LXC `:preprod` | Proxmox nginx |
+| Demo | Neon branch | Cloud Run (separate service) | Cloudflare Pages |
+| Backup | Homelab PG (nightly pg_dump from Neon) | — | — |
 
-### Steps
-- [ ] Create Neon project, migrate data: `pg_dump` from 192.168.86.182 → `pg_restore` to Neon
-- [ ] Update `DATABASE_URL` in Cloud Run env → point at Neon
-- [ ] Deploy backend to Cloud Run: same Docker image from Docker Hub, no code changes
-- [ ] Set up Cloud Run staging service (preprod) pointing at a Neon branch
-- [ ] Deploy Hugo frontend to GitHub Pages via GitHub Actions (`main` branch only)
-- [ ] Set up nightly `pg_dump` cron from Neon → home lab as DR backup
-- [ ] Update Cloudflare tunnel hostnames to point at Cloud Run URLs
-- [ ] Decommission Proxmox market-tracker LXC (or repurpose for preprod)
+- [ ] Create Neon project; migrate schema + data via pg_dump → pg_restore
+- [ ] Update `DATABASE_URL` in Cloud Run env to point at Neon
+- [ ] Deploy backend to Cloud Run (same Docker image, no code changes)
+- [ ] Deploy frontend to GitHub Pages via GitHub Actions
+- [ ] Set up nightly pg_dump cron Neon → homelab as DR backup
+- [ ] Decommission or repurpose Proxmox LXC 109
+
+---
+
+## Sync workers (BQ + GCS — non-blocking, build when needed)
+
+- [ ] `cmd/sync bigquery` — weekly PG → BQ append
+- [ ] `cmd/sync gcs` — weekly JSON bake to GCS bucket
+- [ ] Deploy as Cloud Run Jobs + Cloud Scheduler
