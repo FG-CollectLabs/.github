@@ -25,8 +25,11 @@
 **Depends on:** market-tracker-backend deployed + catalog seeded (see `projects/market-tracker/TODO.md` Phase 1–3)
 
 - [ ] EV-010 Switch default price source from TCGCSV to market-tracker `/v1/prices/batch`
-- [ ] EV-011 Extend market-tracker `PriceRow` to return `listing_count`, `units_sold_week`, `depth_to_plus_{10,25,50}_units` — fix is in `market-tracker-backend/internal/prices/handler.go`
-- [ ] EV-012 Wire `sellthrough.Recommend` — currently always returns `Confidence="unknown"` pending EV-011
+- [~] EV-011 Make market-tracker emit velocity/refill/depth fields. **Scope is bigger than the original blurb** — handler.go already SELECTs these fields, but the data pipeline is broken. Three sub-tasks:
+  - [ ] **EV-011a** Fix `depthingest` TCGPlayer fetcher — Go HTTP client gets HTTP 400 (Cloudflare bot detection) from `mp-search-api.tcgplayer.com` even after `75a4e35` dropped custom TLS pinning. curl from the same LXC returns 200. Likely needs utls / curl-impersonate / ja3 fingerprint workaround. **Without this, listing_depth stays empty forever.**
+  - [ ] **EV-011b** Fix semantic mismatch in `depth_to_plus_{10,25,50}_units` — market-tracker's `depthAtUnits()` writes "price (cents) to be N units deep"; ev-calculator's sellthrough reader interprets the same field as "count of units within +X% of market". Pick one meaning and align both sides. Easier fix: rewrite the writer in `priceingest/depth.go` + `EnrichWithMarketPrice` to count units within +X% of market price, matching ev-calc's expectation.
+  - [ ] **EV-011c** Stand up ≥2 listing_depth snapshots over time — even when ingest-depth succeeds, velocity requires diffing snapshots. Current cron runs once weekly (Sun 00:00 UTC). Either bump to twice (e.g. Sun + Wed) or change `ComputeDepthMetrics` to fall back to a single-snapshot heuristic when only one is available.
+- [ ] EV-012 Wire `sellthrough.Recommend` — currently always returns `Confidence="unknown"` pending EV-011 (the wiring is done in `ev-calculator/internal/ev/report.go:459`; just needs upstream data)
 - [ ] EV-013 Add price source indicator in UI (shows DB snapshot vs live fetch + snapshot age)
 - [ ] EV-014 Add "live fetch" button — forces fresh TCGCSV pull, bypasses DB cache
 - [ ] EV-015 Surface eBay sold price alongside TCGPlayer/Manapool in the singles table

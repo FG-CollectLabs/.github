@@ -1,141 +1,87 @@
 # Agent Checkpoint — 2026-05-19
-## EV Calculator — Shipping/Net Pricing Strategy → Implementation
+## EV Calculator — Shipping/Net Strategy SHIPPED + EV-011 Scope Discovery
 
 ---
 
-## What was done this session
+## What got shipped this session
 
 ### 1. Verified prior bug fixes are live
 
 All three fixes from the previous session (`2026-05-19-ev-calculator-bug-fixes.md`) are deployed:
 
-- ✅ market-tracker-backend SQL fix (`82cdb4a`) — CI green, batch endpoint returning priced data
-- ✅ ev-calculator FallbackPricer fix (`7fee3f3`) — CI green, primary failures now fall back
-- ✅ commander-display.js TDZ crash fix (`20f5caf`) — Pages deploy succeeded, full deck data renders
+- ✅ market-tracker-backend SQL fix (`82cdb4a`)
+- ✅ ev-calculator FallbackPricer fix (`7fee3f3`)
+- ✅ commander-display.js TDZ crash fix (`20f5caf`)
 
-Smoke-tested `https://ev-api.futuregadgetlabs.com/v1/ev/displays/blc-commander-display` — returns full per-card priced line items with sellthrough recs.
+### 2. Three-regime TCGPlayer net pricing — DEPLOYED
 
-### 2. Pricing strategy locked in (planning only — no code changes)
+Commit `3bbb123` on `ev-calculator/main`. Verified live in prod for two of three regimes (no $20+ card exists in any commander case yet, but the code path is identical to the verified PWE branch). The structured `tcgplayer_net` JSON breakdown replaces the flat `tcgplayer_net_cents` int.
 
-See [`projects/ev-calculator/shipping-net-strategy.md`](../projects/ev-calculator/shipping-net-strategy.md) for full doc.
-
-**Shipping cost defaults agreed:**
-- PWE shipment: **$0.93** (materials $0.15 + USPS Forever stamp $0.78)
-- Tracked shipment (bubble + USPS Ground Advantage): **$3.75**
-- Buyer-paid shipping charge for sub-$5 sales: **$1.50** (gives $0.57 margin for labor)
-
-**Three pricing regimes** (the core algorithm change):
-
-| Card price | Mode | TCG net per copy |
+| Regime | Sample | Math |
 |---|---|---|
-| < $5 | Buyer pays $1.50 shipping | `market × (1 − fees) + ($1.50 − $0.93)` |
-| $5 – $20 | Free ship via PWE | `market × (1 − fees) − $0.93` |
-| ≥ $20 | Free ship via tracked bubble | `market × (1 − fees) − $3.75` |
+| `buyer_paid` (<$5) | Zulaport Cutthroat @ $1.48 | list 148 − fees 20 − ship 93 + buyer-paid 150 = **185¢** |
+| `free_ship_pwe` ($5–$20) | Helm of the Host @ $9.59 | list 959 − fees 128 − ship 93 = **738¢** |
+| `free_ship_tracked` (≥$20) | (no card hits threshold) | list × (1 − fees) − 375 |
 
-Thresholds: $5 = TCGPlayer free-shipping badge cutoff; $20 = match eBay bubble threshold (Phil's choice — tracking not technically mandated at $20 but consistent + safer).
+Defaults locked in [`ev-calculator/internal/fees/shipping.go`](../../ev-calculator/internal/fees/shipping.go) (`DefaultTCGPlayerShipping`):
+PWE 93¢ · tracked 375¢ · buyer-paid 150¢ · tracked threshold $20 · free-ship threshold $5.
 
-### 3. Decisions made
+### 3. Sealed-deck $5 small-box shipping — DEPLOYED
 
-| # | Decision | Choice |
-|---|---|---|
-| D-001 | Net field shape in API response | **Structured breakdown** — new `tcgplayer_net` object replaces flat `tcgplayer_net_cents` int |
-| D-002 | Sub-$5 buyer-paid shipping fee | $1.50 |
-| D-003 | Tracked threshold | $20 (matches eBay) |
-| D-004 | Manapool shipping treatment | Keep current (Manapool bundles fulfillment, no cost to us) |
-| D-005 | eBay shipping treatment | Keep current (already deducts ESE/bubble in `fees.go:79`) |
+Commit `501abe1`. `SealedNetCents` now subtracts $5.00 small-box cost. Verified: BLC sealed deck went from `gross 4889 → expected fee-only net 4211 → actual net 3711` (exactly 500¢ less). Manapool is left at 8% fee-only (per Phil — Manapool has no free-ship economics, no labor cost adjustment needed).
 
 ### 4. Repo state
 
-| Repo | Branch | Last commit | Notes |
+| Repo | Branch | Last commit | Pushed |
 |---|---|---|---|
-| `FG-CollectLabs/.github` | `main` | `3da8ce8` Projects: add hocg-ev-calculator and tcgplayer-repricer planning docs | Pushed to origin |
-| `FG-CollectLabs/ev-calculator` | `main` | `20f5caf` commander-display: fix TDZ crash | Last session's fix; unchanged this session |
-| `FG-CollectLabs/market-tracker-backend` | `master` | `82cdb4a` prices: fix stray t-char SQL bug | Last session's fix; uncommitted graded-tracker WIP still in working tree |
+| `FG-CollectLabs/.github` | `main` | `3c05f76` Checkpoint: EV calculator shipping/net strategy handoff (about to be superseded by this checkpoint) | yes |
+| `FG-CollectLabs/ev-calculator` | `main` | `501abe1` fees: deduct $5 small-box shipping from sealed-deck net | yes |
+| `FG-CollectLabs/market-tracker-backend` | `master` | `82cdb4a` (unchanged this session) | n/a |
 
-**Nothing pushed to ev-calculator or market-tracker-backend this session.** All work was docs in the `.github` repo.
+market-tracker-backend's graded-tracker WIP is still uncommitted in the working tree — untouched.
 
 ---
 
-## What's next — pick up here
+## EV-011 Scope Discovery (the big finding)
 
-### Implementation plan (in priority order)
+The user asked me to "fix EV-011". The roadmap blurb said:
+> Extend market-tracker `PriceRow` to return `listing_count`, `units_sold_week`, `depth_to_plus_{10,25,50}_units` — fix is in `market-tracker-backend/internal/prices/handler.go`
 
-#### Step 1 — `internal/fees/shipping.go` (new file)
-Create `ShippingProfile` struct + `DefaultTCGPlayerShipping` instance with the locked defaults. Shape proposed in [`shipping-net-strategy.md`](../projects/ev-calculator/shipping-net-strategy.md#proposed-go-shape):
+**That description is wrong.** The handler.go code already has these fields in the struct AND the SELECT query. The real EV-011 has three deeper sub-problems:
 
-```go
-type ShippingProfile struct {
-    Name              string
-    PWECostCents      int32  // 93
-    TrackedCostCents  int32  // 375
-    BuyerPaidCents    int32  // 150
-    TrackedThreshold  int32  // 2000
-    FreeShipThreshold int32  // 500
-}
-```
+### EV-011a — depthingest TCGPlayer fetcher gets HTTP 400 on every request
 
-Add a method `NetCents(grossCents int32, feeProfile Profile) (regime string, listPrice, fees, shipCost, buyerPaid, net int32)`.
+- The last successful `ingest-depth` run was never — every run logs "1557/1557 errors" with `tcgplayer 400: {"title":"Bad Request"}`.
+- `listing_depth` table is **empty** (0 rows).
+- A prior session already attempted a fix (`75a4e35: drop custom TLS config that Cloudflare now rejects as bot`) — the current deployed image (`philwin/market-tracker-backend:latest` digest from 2026-05-19 16:14 UTC) HAS that fix. It didn't work.
+- **Diagnostic:** curl from inside LXC 109 hits `mp-search-api.tcgplayer.com` and returns HTTP 200 with full listing data — exact same headers, exact same payload. So it's NOT the IP, NOT the headers, NOT the payload.
+- **Hypothesis:** Cloudflare is fingerprinting the Go HTTP client's TLS handshake (JA3 fingerprint) and rejecting it regardless of `User-Agent`. The "drop custom TLS" fix removed the obviously-wrong pinned ciphers but Go's stdlib TLS still doesn't pass as a browser.
+- **Fix path:** swap `net/http` for `github.com/refraction-networking/utls` or `lwthiker/curl-impersonate` to impersonate Chrome's TLS fingerprint. Not a 5-minute change.
+- **Curiosity:** ev-calculator's identical fetcher in `internal/listings/tcgplayer.go` is supposedly used for the `LiveDepth` feature. We haven't independently verified whether THAT actually works in prod either — could be silently broken too. Worth confirming.
 
-#### Step 2 — `internal/ev/report.go` — replace flat field with structured
+### EV-011b — semantic mismatch in `depth_to_plus_{10,25,50}_units`
 
-Current ([`report.go:82-83`](../../ev-calculator/internal/ev/report.go#L82)):
-```go
-TCGPlayerNetCents *int32 `json:"tcgplayer_net_cents,omitempty"`
-```
+- **Writer side** ([`market-tracker-backend/internal/priceingest/depth.go:124`](../../market-tracker-backend/internal/priceingest/depth.go#L124)): `depthAtUnits(latest.tiers, 10)` returns the PRICE (cents) of the tier where cumulative quantity reaches 10. Field is internally named `DepthToPlus10Cents` (price).
+- **Reader side** ([`ev-calculator/internal/sellthrough/sellthrough.go:99`](../../ev-calculator/internal/sellthrough/sellthrough.go#L99)): treats `depth_to_plus_10_units` as a **count of units** within +10% of market price, divides by velocity to estimate weeks-to-sell.
+- These are different fields with the same name. Even if the data pipeline succeeds, the sellthrough recommendation will produce garbage numbers.
+- **Fix:** rewrite the market-tracker writer to compute count-within-+X%-of-market (which requires the market price — should move into `EnrichWithMarketPrice`). Smaller, mechanical code change.
 
-Replace with:
-```go
-type TCGPlayerNetBreakdown struct {
-    Regime             string `json:"regime"`           // "buyer_paid"|"free_ship_pwe"|"free_ship_tracked"
-    ListPriceCents     int32  `json:"list_price_cents"`
-    FeesCents          int32  `json:"fees_cents"`
-    ShipCostCents      int32  `json:"ship_cost_cents"`
-    BuyerShipPaidCents int32  `json:"buyer_ship_paid_cents"`
-    NetPerCopyCents    int32  `json:"net_per_copy_cents"`
-}
+### EV-011c — velocity requires ≥2 snapshots over time
 
-TCGPlayerNet *TCGPlayerNetBreakdown `json:"tcgplayer_net,omitempty"`
-```
+- `ComputeDepthMetrics` derives `units_sold_week` and `add_back_units_week` by diffing consecutive `listing_depth` snapshots ([`depth.go:128-149`](../../market-tracker-backend/internal/priceingest/depth.go#L128)).
+- The cron runs `ingest-depth` once per week (Sun 00:00 UTC). One snapshot per week → zero velocity ever.
+- **Fix:** add a second cron firing midweek (Sun + Wed), or change `ComputeDepthMetrics` to fall back to a single-snapshot heuristic when only one row exists.
 
-Update the calculation at [`report.go:429`](../../ev-calculator/internal/ev/report.go#L429) — currently:
-```go
-tcgNet := singlesProf.NetCents(grossPerCopy)
-li.TCGPlayerNetCents = &tcgNet
-```
+---
 
-Replace with regime-aware call into `ShippingProfile.NetCents(...)`.
+## TODOs (parked, in priority order)
 
-Also update `NetPerCopyCents` at [`report.go:444`](../../ev-calculator/internal/ev/report.go#L444) to pull from the new breakdown's `NetPerCopyCents` so the totals in `IncludedNetCents` stay correct.
-
-#### Step 3 — Frontend updates
-
-The frontend reads `tcgplayer_net_cents` in:
-- `ev-calculator/frontend/static/js/commander-display.js`
-- `ev-calculator/frontend/static/js/commander.js` (probably — need to grep)
-
-Change those reads to use `tcgplayer_net.net_per_copy_cents`. Optionally surface the regime badge (PWE / tracked / buyer-paid) in the singles table.
-
-#### Step 4 — Test locally before pushing
-
-```powershell
-cd c:\Users\nguye\VSCode\FG-CollectLabs\ev-calculator
-go test ./internal/...
-go run ./cmd/api  # then curl /v1/ev/displays/blc-commander-display
-```
-
-Spot-check three cards: one under $5, one in $5-$20 band, one ≥$20. Confirm the regime matches and the net math is correct.
-
-#### Step 5 — Push + verify
-
-- `git push origin main` on ev-calculator → CI builds API image + Pages redeploys
-- Verify at `https://ev-api.futuregadgetlabs.com/v1/ev/displays/blc-commander-display`
-- Verify at `https://ev-calculator.futuregadgetlabs.com/commander/display/?key=blc-commander-display`
-
-### Open questions for next session
-
-1. **Sealed deck net** — should sealed decks also apply tracked shipping (bubble mailer cost $3.75)? They're always over $20. Currently `SealedNetCents` only deducts fees. Probably yes — same logic applies.
-2. **Manapool net** — should the 8% fee deduction account for any Manapool-side shipping/labor? Phil said Manapool bundles fulfillment; need to confirm whether their 8% truly nets clean or if there's labor cost still on our side.
-3. **Repricer endpoint** — `POST /v1/reprice` design is sketched in [`shipping-net-strategy.md`](../projects/ev-calculator/shipping-net-strategy.md#repricer-integration-future) but not implemented. Likely a v0.3.0 feature, separate from this shipping-net work.
+1. **EV-011a** (highest blocker) — Solve Cloudflare TLS-fingerprint block on depthingest. Without it, the whole sellthrough chain stays starved.
+2. **EV-011b** — Align `depth_to_plus_{10,25,50}_units` semantics between writer and reader.
+3. **EV-011c** — Decide on multi-snapshot cadence (twice-weekly cron or single-snapshot fallback).
+4. **Verify ev-calculator's `LiveDepth` works in prod** — if it does, the difference between it and the failed depthingest fetcher will reveal the TLS fix.
+5. Sealed-deck shipping is shipped, but verify SealedDecks scenario delta math still makes sense after the −$5 hit. (Briefly: SealedDecksNetCents went down by $5 × deck_count × copies per case.)
+6. Repricer endpoint (`POST /v1/reprice`) — sketched in [`projects/ev-calculator/shipping-net-strategy.md`](../projects/ev-calculator/shipping-net-strategy.md#repricer-integration-future). Blocked on EV-011 (needs velocity + refill).
 
 ---
 
@@ -143,12 +89,19 @@ Spot-check three cards: one under $5, one in $5-$20 band, one ≥$20. Confirm th
 
 | Path | What |
 |---|---|
-| `ev-calculator/internal/fees/fees.go` | Existing fee profiles + eBay shipping |
-| `ev-calculator/internal/ev/report.go` | Report builder — where net is computed per line item |
-| `ev-calculator/internal/pricing/pricing.go` | `PriceRow` shape (all the depth/velocity fields we'll need for repricer) |
-| `ev-calculator/internal/listings/tcgplayer.go` | Live FetchDepth — gives per-listing `price + shippingPrice` |
-| `.github/projects/ev-calculator/shipping-net-strategy.md` | **Full strategy doc — single source of truth** |
-| `.github/projects/ev-calculator/roadmap.md` | EV calc roadmap; add a new task ID for "three-regime shipping net" |
+| `.github/projects/ev-calculator/roadmap.md` | Roadmap — EV-011 now has detailed sub-tasks a/b/c |
+| `.github/projects/ev-calculator/shipping-net-strategy.md` | Shipping strategy decisions (Phase 1, shipped) |
+| `ev-calculator/internal/fees/shipping.go` | `ShippingProfile` + `Apply()` |
+| `ev-calculator/internal/ev/report.go` | Report builder w/ regime-aware net + $5 sealed-deck deduction |
+| `ev-calculator/internal/sellthrough/sellthrough.go` | Reader side of EV-011b semantic bug |
+| `ev-calculator/internal/listings/tcgplayer.go` | LiveDepth fetcher (need to verify it actually works) |
+| `market-tracker-backend/internal/depthingest/tcgplayer.go` | Failing depth ingest (EV-011a) |
+| `market-tracker-backend/internal/priceingest/depth.go` | Writer side of EV-011b semantic bug |
 
-### Suggested new roadmap task
-`EV-030 Three-regime shipping net calculation` — slot under v0.2.0 (depends on EV-011 market-tracker depth fields already done).
+---
+
+## What to do next
+
+When the next session starts: pick from the parked TODOs above. The biggest-leverage next move is **EV-011a** because everything downstream depends on it. If you don't want to wade into utls/curl-impersonate territory yet, **EV-011b** is a clean isolated code fix that pays off the moment EV-011a lands.
+
+Either way, today's deploy of regime-aware shipping/net is **the user-visible value already shipped** — that part of the work is done.
