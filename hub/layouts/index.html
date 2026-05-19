@@ -387,13 +387,14 @@
       <div class="card-title">Slab Cracker</div>
       <span class="badge badge-local">local :5173</span>
     </div>
-    <div class="card-desc">Card centering measurement web app. No backend — CORS-restricted fetches only. PSA/CGC cert auto-fetch lives in the companion Chrome MV3 extension.</div>
+    <div class="card-desc">Card centering measurement web app. PSA/CGC cert auto-fetch via companion Chrome MV3 extension. Backend persists certs + every centering analysis (regrading history); market data joined from market-tracker via display_key.</div>
     <div class="tech-row">
       <span class="tech">Vite</span><span class="tech">TypeScript</span>
       <span class="tech">Chrome MV3 extension</span>
     </div>
     <div class="links">
       <div class="link-row"><span class="link-label">local</span><a href="http://localhost:5173" target="_blank">localhost:5173</a></div>
+      <div class="link-row"><span class="link-label">api</span><a href="http://localhost:8081/healthz" target="_blank">localhost:8081</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">→ slab-cracker-backend</span></div>
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/slab-cracker-frontend" target="_blank">slab-cracker-frontend</a></div>
     </div>
     <div class="cmd">cd slab-cracker-frontend &amp;&amp; npm run dev</div>
@@ -497,6 +498,24 @@
 
   <div class="card">
     <div class="card-header">
+      <div class="card-title">Slab Cracker Backend</div>
+      <span class="badge badge-homelab">192.168.86.183:8081</span>
+    </div>
+    <div class="card-desc">Go API + PostgreSQL for cert persistence and centering history. Extension POSTs scraped cert data; frontend POSTs every centering analysis. Trend endpoint keyed by display_key for cross-cert comparison. Market data (PSA9/PSA10 prices, gem rates) joined client-side from market-tracker.</div>
+    <div class="tech-row">
+      <span class="tech">Go</span><span class="tech">pgx</span>
+      <span class="tech">PostgreSQL</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">homelab</span><a href="http://192.168.86.183:8081/healthz" target="_blank">192.168.86.183:8081</a></div>
+      <div class="link-row"><span class="link-label">local</span><a href="http://localhost:8081/healthz" target="_blank">localhost:8081</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/slab-cracker-backend" target="_blank">slab-cracker-backend</a></div>
+    </div>
+    <div class="cmd">cd slab-cracker-backend &amp;&amp; go run ./cmd/api</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
       <div class="card-title">Sellthrough Analyzer</div>
       <span class="badge badge-homelab">pipeline</span>
     </div>
@@ -594,8 +613,11 @@
 
 <span class="hi">Standalone / Self-Contained</span>
 
-  <span class="acc">slab-cracker-frontend</span>  (Vite :5173)  ─  no backend; CORS fetches only
-    └── slab-cracker-extension  (Chrome MV3)  — right-click capture, PSA/CGC cert fetch
+  <span class="acc">slab-cracker-frontend</span>  (Vite :5173)
+    ├── slab-cracker-extension  (Chrome MV3)  — right-click capture, PSA/CGC cert fetch
+    ├── <span class="acc">slab-cracker-backend</span>  (Go :8081)  ←─ <span class="hi">PostgreSQL</span> 192.168.86.183 · slabcracker DB
+    │     persists certs + every centering analysis (regrading history)
+    └── joins  market-tracker  /v1/cards/{display_key}/graded  for PSA9→PSA10 price delta
 
   <span class="acc">anontcg-deal-analyzer</span>  (Hugo :1314)
     └── Python MCP servers (AnonTCG Shopify API + Playwright TCGPlayer scrape)
@@ -660,6 +682,12 @@
       <td>card_inventory</td>
       <td>card-inventory-backend</td>
       <td>orgs, inventory_items, locations, acquisitions, transactions, listings, item_transformations</td>
+    </tr>
+    <tr>
+      <td>192.168.86.183:5432</td>
+      <td>slabcracker</td>
+      <td>slab-cracker-backend</td>
+      <td>certs, cert_scans, centering_analyses</td>
     </tr>
     <tr>
       <td>BigQuery</td>
@@ -828,6 +856,7 @@ const CHECKS = [
   { name: "Market Tracker",        url: "https://market.futuregadgetlabs.com/healthz",       health: null },
   { name: "Card Inventory",        url: "https://inventory.futuregadgetlabs.com",            health: null },
   { name: "Card Inventory API",    url: "https://inventory-api.futuregadgetlabs.com/healthz",health: null },
+  { name: "Slab Cracker Backend",  url: "http://192.168.86.183:8081/healthz",                health: null },
 ];
 
 async function checkOne(c) {
