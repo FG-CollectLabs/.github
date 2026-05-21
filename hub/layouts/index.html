@@ -350,16 +350,17 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Market Tracker Frontend</div>
-      <span class="badge badge-local">local :5175</span>
+      <span class="badge badge-live">live</span>
     </div>
-    <div class="card-desc">Dark SPA for TCG market price tracking. Sets index, set detail (market / cards / sealed / graded ROI tabs), card price history, graded coverage. Code complete — not yet deployed (waiting on backend LXC + Cloudflare Tunnel).</div>
+    <div class="card-desc">Dark SPA for TCG market price tracking. Sets index, set detail (market / cards / sealed / graded ROI tabs), card price history. Graded ROI tab: PSA/CGC gem rates, EV curve with gem-rate sensitivity chart, per-card PriceCharting links, watch toggle. Deployed on GitHub Pages, API key baked into bundle.</div>
     <div class="tech-row">
       <span class="tech">Vite</span><span class="tech">React 18</span>
-      <span class="tech">TypeScript</span><span class="tech">Tailwind v3</span>
+      <span class="tech">TypeScript</span><span class="tech">Tailwind v3</span><span class="tech">GitHub Pages</span>
     </div>
     <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://fg-collectlabs.github.io/market-tracker-frontend/" target="_blank">fg-collectlabs.github.io/market-tracker-frontend/</a></div>
+      <div class="link-row"><span class="link-label">graded</span><a href="https://fg-collectlabs.github.io/market-tracker-frontend/#/graded" target="_blank">#/graded — Graded ROI coverage</a></div>
       <div class="link-row"><span class="link-label">local</span><a href="http://localhost:5175" target="_blank">localhost:5175</a></div>
-      <div class="link-row"><span class="link-label">api</span><a href="http://localhost:8080" target="_blank">localhost:8080</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">→ market-tracker-backend</span></div>
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/market-tracker-frontend" target="_blank">market-tracker-frontend</a></div>
     </div>
     <div class="cmd">cd market-tracker-frontend &amp;&amp; npm run dev</div>
@@ -519,13 +520,14 @@
       <div class="card-title">Sellthrough Analyzer</div>
       <span class="badge badge-homelab">pipeline</span>
     </div>
-    <div class="card-desc">Python ingest pipeline — scrapes TCGPlayer/Manapool weekly, normalizes, and POSTs bulk price records to market-tracker-backend. Also feeds BigQuery for analytical history.</div>
+    <div class="card-desc">Python ingest pipeline — scrapes TCGPlayer/Manapool weekly, POSTs bulk price records to market-tracker-backend. Graded sub-CLI scrapes PSA/CGC pop reports (gem rates), PriceCharting console pages (raw + PSA 9/10 prices), and individual card pages (CGC 10).</div>
     <div class="tech-row">
-      <span class="tech">Python</span><span class="tech">BigQuery</span>
+      <span class="tech">Python</span><span class="tech">Playwright</span><span class="tech">BigQuery</span>
     </div>
     <div class="links">
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/sellthrough-analyzer" target="_blank">sellthrough-analyzer</a></div>
     </div>
+    <div class="cmd">sellthrough graded console-prices &lt;url&gt; --game pokemon --set-code jtg</div>
   </div>
 
 </div>
@@ -559,14 +561,16 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Graded Market Watch</div>
-      <span class="badge badge-plan">planning</span>
+      <span class="badge badge-live">live</span>
     </div>
-    <div class="card-desc">Extension of market-tracker-backend: PSA/CGC pop report scrapers, gem rate computation, weekly graded price snapshots (PriceCharting + Apify eBay), watchlist signals (undervalued-10, regrade-candidate-9).</div>
+    <div class="card-desc">Graded ROI layer inside market-tracker-backend. PSA + CGC pop report scrapers seed gem rates. PriceCharting console scraper fetches raw/PSA 9/PSA 10 in one page; individual page scraper adds CGC 10. Per-card watch toggle. Graded ROI tab with EV curve + sensitivity chart.</div>
     <div class="tech-row">
-      <span class="tech">Go (in market-tracker-backend)</span>
-      <span class="tech">PriceCharting API</span><span class="tech">Apify / eBay</span>
+      <span class="tech">Go (market-tracker-backend)</span>
+      <span class="tech">Python / Playwright</span>
+      <span class="tech">PriceCharting</span><span class="tech">PSA</span><span class="tech">CGC</span>
     </div>
     <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://fg-collectlabs.github.io/market-tracker-frontend/#/graded" target="_blank">market-tracker-frontend/#/graded</a></div>
       <div class="link-row"><span class="link-label">plan</span><a href="https://github.com/FG-CollectLabs/.github/tree/main/projects/graded-market-watch" target="_blank">.github/projects/graded-market-watch/</a></div>
     </div>
   </div>
@@ -760,18 +764,28 @@
   <div class="rm-card">
     <div class="rm-header">
       <div class="rm-title">Market Tracker</div>
-      <span class="rm-release">v0.1.0</span>
+      <span class="rm-release">v0.2.0</span>
     </div>
     <div>
-      <div class="rm-next-label">Phase 1–3 — Get it live</div>
+      <div class="rm-next-label">Shipped in v0.2</div>
       <div class="rm-items">
-        <div class="rm-item">Provision LXC 109 (192.168.86.199) + deploy Docker container</div>
-        <div class="rm-item">Seed catalog: soc, sos, blc, ffc + all EV calculator sets</div>
-        <div class="rm-item">Run first ingest (depth → prices → ebay → listings)</div>
-        <div class="rm-item">Deploy frontend to market-tracker.futuregadgetlabs.com</div>
+        <div class="rm-item">Backend on LXC 109 (market.futuregadgetlabs.com) · frontend on GitHub Pages</div>
+        <div class="rm-item">Graded ROI tab: PSA/CGC gem rates, EV curve, gem-rate sensitivity chart</div>
+        <div class="rm-item">PriceCharting console scraper (raw + PSA 9/10 for full set in one page)</div>
+        <div class="rm-item">PSA &amp; CGC pop report scrapers · per-card watch toggle (admin)</div>
+      </div>
+    </div>
+    <div>
+      <div class="rm-next-label">Next up</div>
+      <div class="rm-items">
+        <div class="rm-item">TCGPlayer / Manapool weekly ingest (currently: PriceCharting only)</div>
+        <div class="rm-item">eBay sold integration (Apify scraper)</div>
+        <div class="rm-item">Listing depth ingest for sellthrough signals</div>
+        <div class="rm-item">Graded watchlist signals: undervalued-10, regrade-candidate-9</div>
       </div>
     </div>
     <div class="rm-links">
+      <a href="https://fg-collectlabs.github.io/market-tracker-frontend/" target="_blank">↗ Live Site</a>
       <a href="https://github.com/FG-CollectLabs/market-tracker-backend/releases" target="_blank">↗ Releases</a>
       <a href="https://github.com/FG-CollectLabs/.github/blob/main/projects/market-tracker/TODO.md" target="_blank">↗ Roadmap</a>
     </div>
@@ -803,18 +817,26 @@
   <div class="rm-card">
     <div class="rm-header">
       <div class="rm-title">Graded Market Watch</div>
-      <span class="rm-release-none" style="font-size:11px;color:var(--muted);">planning</span>
+      <span class="rm-release">v0.1 shipped</span>
     </div>
     <div>
-      <div class="rm-next-label">Planned features</div>
+      <div class="rm-next-label">Shipped (in market-tracker v0.2)</div>
       <div class="rm-items">
-        <div class="rm-item">PSA / CGC pop report scrapers + gem rate computation</div>
-        <div class="rm-item">Weekly graded price snapshots (PriceCharting + eBay)</div>
+        <div class="rm-item">PSA pop report scraper + gem rate upload</div>
+        <div class="rm-item">CGC pop report scraper (paginated) + gem rate upload</div>
+        <div class="rm-item">PriceCharting graded prices (PSA 9/10, CGC 10) via console + individual pages</div>
+        <div class="rm-item">Graded ROI table with EV curve + per-card PriceCharting links</div>
+      </div>
+    </div>
+    <div>
+      <div class="rm-next-label">Remaining</div>
+      <div class="rm-items">
         <div class="rm-item">Watchlist signals: undervalued-10, regrade-candidate-9</div>
+        <div class="rm-item">eBay graded sold integration</div>
       </div>
     </div>
     <div class="rm-links">
-      <a href="https://github.com/FG-CollectLabs/.github/blob/main/projects/graded-market-watch/ARCHITECTURE.md" target="_blank">↗ Architecture</a>
+      <a href="https://fg-collectlabs.github.io/market-tracker-frontend/#/graded" target="_blank">↗ Live — Graded ROI</a>
       <a href="https://github.com/FG-CollectLabs/.github/blob/main/projects/graded-market-watch/TODO.md" target="_blank">↗ Roadmap</a>
     </div>
   </div>
@@ -850,13 +872,14 @@
 
 <script>
 const CHECKS = [
-  { name: "EV Calculator",         url: "https://ev-calculator.futuregadgetlabs.com",       health: null },
-  { name: "EV API",                url: "https://ev-api.futuregadgetlabs.com/healthz",       health: null },
-  { name: "Card Identifier",       url: "https://cards.futuregadgetlabs.com/healthz",        health: null },
-  { name: "Market Tracker",        url: "https://market.futuregadgetlabs.com/healthz",       health: null },
-  { name: "Card Inventory",        url: "https://inventory.futuregadgetlabs.com",            health: null },
-  { name: "Card Inventory API",    url: "https://inventory-api.futuregadgetlabs.com/healthz",health: null },
-  { name: "Slab Cracker Backend",  url: "http://192.168.86.183:8081/healthz",                health: null },
+  { name: "EV Calculator",           url: "https://ev-calculator.futuregadgetlabs.com",                          health: null },
+  { name: "EV API",                  url: "https://ev-api.futuregadgetlabs.com/healthz",                         health: null },
+  { name: "Card Identifier",         url: "https://cards.futuregadgetlabs.com/healthz",                          health: null },
+  { name: "Market Tracker API",      url: "https://market.futuregadgetlabs.com/healthz",                         health: null },
+  { name: "Market Tracker Frontend", url: "https://fg-collectlabs.github.io/market-tracker-frontend/",           health: null },
+  { name: "Card Inventory",          url: "https://inventory.futuregadgetlabs.com",                              health: null },
+  { name: "Card Inventory API",      url: "https://inventory-api.futuregadgetlabs.com/healthz",                  health: null },
+  { name: "Slab Cracker Backend",    url: "http://192.168.86.183:8081/healthz",                                   health: null },
 ];
 
 async function checkOne(c) {
