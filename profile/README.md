@@ -21,6 +21,7 @@ Everything here is production software running against real data — not toy pro
 | [EV Calculator](https://futuregadgetlabs.com/ev-calculator/) | Go · Hugo · Vanilla JS · Firebase Auth · GitHub Pages | Sealed product expected-value calculator for MTG commander precon cases. Per-card market price breakdown, platform fee modeling (TCGPlayer/eBay/Manapool), eBay File Exchange CSV export, scan-to-identify via pHash+OCR. |
 | [Card Inventory](https://inventory.futuregadgetlabs.com) | Go · React/TS · Vite · PostgreSQL · Firebase Auth · Cloudflare Tunnel | Multi-tenant inventory management SaaS. Tracks box breaks, chaos-sort bin locations, grading submissions, eBay listings, and P&L. |
 | [WS Set Analysis](https://fg-collectlabs.github.io/ws-set-analysis/) | Python · Claude API · MCP servers · Hugo · GitHub Pages | AI-driven Weiss Schwarz booster investment blog. Claude agent orchestrates Jikan (anime data), Yuyutei (JP preorder prices), and TCGPlayer sub-agents to produce set investment writeups. |
+| [Binder Planner](https://fg-collectlabs.github.io/binder-planner/) | Vite · React 18 · TypeScript · Tailwind · IndexedDB | Free michi-style TCG binder layout tool. Drag-and-drop cards, postcards, fan art, and custom artwork into pocket grids (4/9/12-pocket). Single, wide, and tall slot spanning. Export/import binder layouts as JSON. No backend. |
 
 ---
 
@@ -43,6 +44,8 @@ Everything here is production software running against real data — not toy pro
 | [`card-identifier-frontend`](https://github.com/FG-CollectLabs/card-identifier-frontend) | **Vite · TypeScript** | Standalone image-upload UI for the card identifier API. |
 | [`slab-cracker-frontend`](https://github.com/FG-CollectLabs/slab-cracker-frontend) | **Vite · TypeScript** | Card centering measurement web app. Clientside only — no backend. |
 | [`slab-cracker-extension`](https://github.com/FG-CollectLabs/slab-cracker-extension) | **Chrome MV3 · TypeScript** | Companion extension: right-click region capture, PSA/CGC cert lookup, CORS-restricted fetches. |
+| [`binder-planner`](https://github.com/FG-CollectLabs/binder-planner) | **Vite · React 18 · TypeScript · Tailwind · dnd-kit · localforage** | Free michi-style binder layout planner. Drag images into pocket grids, span slots horizontally or vertically, export/import layouts as JSON. Deployed to GitHub Pages. |
+| [`binder-companion`](https://github.com/FG-CollectLabs/binder-companion) | **Chrome MV3 · TypeScript · esbuild** | Companion extension for binder-planner. Injects "Send to Binder Planner" buttons on artofpkm.com; queues images into a review inbox bridged to the planner via postMessage. |
 
 ### Investment Analysis
 
