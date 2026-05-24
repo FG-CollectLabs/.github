@@ -357,6 +357,42 @@
     <div class="cmd">cd binder-planner &amp;&amp; npm run dev</div>
   </div>
 
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Bulk Lot Analyzer</div>
+      <span class="badge badge-plan">planning</span>
+    </div>
+    <div class="card-desc">Buyer-side eBay lot bid sanity check. Drag-drop listing photos + paste seller description, get a structured LLM appraisal: card count, condition, value range, recommended offer, opening + max bid, red flags. BYO Claude API key, frontend-only.</div>
+    <div class="tech-row">
+      <span class="tech">Vite</span><span class="tech">React 19</span><span class="tech">TypeScript</span><span class="tech">Tailwind v4</span><span class="tech">Claude Sonnet 4.6</span><span class="tech">GitHub Pages</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">plan</span><a href="https://github.com/FG-CollectLabs/.github/tree/main/projects/bulk-lot-analyzer" target="_blank">.github/projects/bulk-lot-analyzer</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/bulk-lot-analyzer" target="_blank">FG-CollectLabs/bulk-lot-analyzer</a></div>
+    </div>
+    <div class="cmd">cd bulk-lot-analyzer &amp;&amp; npm run dev</div>
+  </div>
+
+</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Graded Lister</div>
+      <span class="badge badge-live">live</span>
+    </div>
+    <div class="card-desc">PSA cert lookup → graded card investment pipeline. Decision surface: market signals (PSA9/PSA10/gem rate), regrade EV, community review aggregate. Review form (classification + subgrades). Ventures P&amp;L tracker: buy → submit → grade → sell. Feedback loop: Log as Purchase from Decision, Regrade Analysis from graded cards. Firebase Google OAuth, PWA.</div>
+    <div class="tech-row">
+      <span class="tech">Vite / React / TS</span><span class="tech">Go</span><span class="tech">pgx</span><span class="tech">PostgreSQL</span><span class="tech">GCS</span><span class="tech">Firebase Auth</span><span class="tech">GitHub Pages</span><span class="tech">Cloudflare Tunnel</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://fg-collectlabs.github.io/graded-lister/" target="_blank">fg-collectlabs.github.io/graded-lister/</a></div>
+      <div class="link-row"><span class="link-label">api</span><a href="https://graded-api.futuregadgetlabs.com/healthz" target="_blank">graded-api.futuregadgetlabs.com</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">→ LXC 109 :8082</span></div>
+      <div class="link-row"><span class="link-label">frontend</span><a href="https://github.com/FG-CollectLabs/graded-lister" target="_blank">graded-lister</a></div>
+      <div class="link-row"><span class="link-label">backend</span><a href="https://github.com/FG-CollectLabs/graded-lister-backend" target="_blank">graded-lister-backend</a></div>
+    </div>
+    <div class="cmd">cd graded-lister &amp;&amp; npm run dev</div>
+  </div>
+
 </div>
 
 <!-- ── FRONTENDS ──────────────────────────────────────── -->
@@ -402,7 +438,7 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Slab Cracker</div>
-      <span class="badge badge-local">local :5173</span>
+      <span class="badge badge-live">live</span>
     </div>
     <div class="card-desc">Card centering measurement web app. PSA/CGC cert auto-fetch via companion Chrome MV3 extension. Backend persists certs + every centering analysis (regrading history); market data joined from market-tracker via display_key.</div>
     <div class="tech-row">
@@ -410,8 +446,9 @@
       <span class="tech">Chrome MV3 extension</span>
     </div>
     <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://fg-collectlabs.github.io/slab-cracker-frontend/" target="_blank">fg-collectlabs.github.io/slab-cracker-frontend/</a></div>
       <div class="link-row"><span class="link-label">local</span><a href="http://localhost:5173" target="_blank">localhost:5173</a></div>
-      <div class="link-row"><span class="link-label">api</span><a href="http://localhost:8081/healthz" target="_blank">localhost:8081</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">→ slab-cracker-backend</span></div>
+      <div class="link-row"><span class="link-label">api</span><a href="https://slab-api.futuregadgetlabs.com/healthz" target="_blank">slab-api.futuregadgetlabs.com</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">→ slab-cracker-backend</span></div>
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/slab-cracker-frontend" target="_blank">slab-cracker-frontend</a></div>
     </div>
     <div class="cmd">cd slab-cracker-frontend &amp;&amp; npm run dev</div>
@@ -516,14 +553,15 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Slab Cracker Backend</div>
-      <span class="badge badge-homelab">192.168.86.183:8081</span>
+      <span class="badge badge-homelab">slab-api.futuregadgetlabs.com</span>
     </div>
-    <div class="card-desc">Go API + PostgreSQL for cert persistence and centering history. Extension POSTs scraped cert data; frontend POSTs every centering analysis. Trend endpoint keyed by display_key for cross-cert comparison. Market data (PSA9/PSA10 prices, gem rates) joined client-side from market-tracker.</div>
+    <div class="card-desc">Go API + PostgreSQL for cert persistence and centering history. Extension POSTs scraped cert data; frontend POSTs every centering analysis. Trend endpoint keyed by display_key for cross-cert comparison. Market data (PSA9/PSA10 prices, gem rates) joined client-side from market-tracker. Writes require Bearer ADMIN_API_TOKEN.</div>
     <div class="tech-row">
       <span class="tech">Go</span><span class="tech">pgx</span>
       <span class="tech">PostgreSQL</span>
     </div>
     <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://slab-api.futuregadgetlabs.com/healthz" target="_blank">slab-api.futuregadgetlabs.com</a></div>
       <div class="link-row"><span class="link-label">homelab</span><a href="http://192.168.86.183:8081/healthz" target="_blank">192.168.86.183:8081</a></div>
       <div class="link-row"><span class="link-label">local</span><a href="http://localhost:8081/healthz" target="_blank">localhost:8081</a></div>
       <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/slab-cracker-backend" target="_blank">slab-cracker-backend</a></div>
@@ -555,17 +593,16 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Graded Regrade Tracker</div>
-      <span class="badge badge-cli">CLI</span>
+      <span class="badge badge-cli">superseded</span>
     </div>
-    <div class="card-desc">Buy → analyze → grade → sell P&amp;L tracker. Records purchases, pre-grading analyses, submissions, results, and sales. Joins market-tracker for market context at report time.</div>
+    <div class="card-desc">Original CLI concept for buy → grade → sell P&amp;L. Superseded by <strong>Graded Lister</strong> (full web app with Decision surface, review system, and Ventures tracker). graded_tracker DB migrated to LXC 113 (.185) and extended with review_observations, cert_card_map, and richer views.</div>
     <div class="tech-row">
-      <span class="tech">Go</span><span class="tech">pgx / sqlc</span>
-      <span class="tech">PostgreSQL (graded_tracker on .182)</span>
+      <span class="tech">Go</span><span class="tech">pgx</span>
+      <span class="tech">PostgreSQL (graded_tracker on .185)</span>
     </div>
     <div class="links">
-      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/graded-regrade-tracker" target="_blank">graded-regrade-tracker</a></div>
+      <div class="link-row"><span class="link-label">live app</span><a href="https://fg-collectlabs.github.io/graded-lister/" target="_blank">graded-lister (web app)</a></div>
     </div>
-    <div class="cmd">graded-regrade-tracker report pnl</div>
   </div>
 
 </div>
@@ -664,6 +701,27 @@
 
   <span class="acc">graded-market-watch</span>  (inside market-tracker-backend)
     └── pop report scrapers, gem rate view, watchlist signals
+
+
+<span class="hi">Graded Investment Pipeline</span>  <span class="grn">← live</span>
+
+  <span class="acc">graded-lister</span>  (<span class="grn">fg-collectlabs.github.io/graded-lister/</span>  · Vite/React/TS · PWA)
+    │  Firebase Google OAuth (fglabs.contact@gmail.com only)
+    │
+    ├── PSA Lookup  ──▶  <span class="acc">graded-lister-backend</span>  /v1/cert/{cert}
+    │                         └── PSA Public API proxy + GCS image cache (fg-graded-lister bucket)
+    │
+    ├── Decision    ──▶  <span class="acc">graded-lister-backend</span>  /v1/cards/resolve  (cert → MT card_id)
+    │              ──▶  <span class="acc">market-tracker-backend</span>  /v1/cards/{key}/signals  (prices, gem rate)
+    │              ──▶  <span class="acc">graded-lister-backend</span>  /v1/reviews/aggregate  (misgrade rate)
+    │              ──▶  <span class="acc">graded-lister-backend</span>  /v1/reviews  (submit review)
+    │
+    └── Ventures    ──▶  <span class="acc">graded-lister-backend</span>  /v1/ventures  (buy→submit→grade→sell P&amp;L)
+
+  <span class="acc">graded-lister-backend</span>  (<span class="grn">graded-api.futuregadgetlabs.com</span>  · LXC 109 :8082)
+    ├── <span class="hi">PostgreSQL 15</span>  192.168.86.185 (LXC 113)  ·  graded_tracker DB
+    ├── <span class="hi">GCS</span>  fg-graded-lister bucket  (PSA cert images, public read)
+    └── calls  <span class="acc">market-tracker-backend</span>  /v1/cards/resolve  (fuzzy card match)
 </pre>
 </div>
 
@@ -686,10 +744,10 @@
       <td>games, sets, cards, sealed_products, weekly_prices, graded_snapshots_weekly</td>
     </tr>
     <tr>
-      <td>192.168.86.182:5432</td>
+      <td>192.168.86.185:5432 (LXC 113)</td>
       <td>graded_tracker</td>
-      <td>graded-regrade-tracker</td>
-      <td>tracked_cards, purchases, grading_submissions, grading_results, sales</td>
+      <td>graded-lister-backend</td>
+      <td>tracked_cards, purchases, grading_submissions, grading_results, sales, review_observations, cert_card_map · views: venture_pnl, review_aggregates</td>
     </tr>
     <tr>
       <td>192.168.86.181:5432</td>
@@ -859,20 +917,31 @@
 
   <div class="rm-card">
     <div class="rm-header">
-      <div class="rm-title">Graded Regrade Tracker</div>
-      <span class="rm-release-none" style="font-size:11px;color:var(--muted);">planning</span>
+      <div class="rm-title">Graded Lister</div>
+      <span class="rm-release">v1.0 shipped</span>
     </div>
     <div>
-      <div class="rm-next-label">Planned features</div>
+      <div class="rm-next-label">Shipped</div>
       <div class="rm-items">
-        <div class="rm-item">Buy → grade → sell P&amp;L CLI</div>
-        <div class="rm-item">Market context from market-tracker at purchase date</div>
-        <div class="rm-item">Pre-grading analysis workflow</div>
+        <div class="rm-item">PSA cert lookup + GCS image cache (graded-lister-backend on LXC 109 :8082)</div>
+        <div class="rm-item">Decision surface: resolve cert → MT card, PSA9/PSA10/gem-rate signals, regrade EV</div>
+        <div class="rm-item">Review system: classification + subgrades → review_observations; community aggregate</div>
+        <div class="rm-item">Ventures tracker: buy → submit → grade → sell P&amp;L (venture_pnl view)</div>
+        <div class="rm-item">Feedback loop: Log as Purchase from Decision, Regrade Analysis from graded ventures</div>
+        <div class="rm-item">PWA manifest + Firebase Google OAuth gate</div>
+      </div>
+    </div>
+    <div>
+      <div class="rm-next-label">Next up</div>
+      <div class="rm-items">
+        <div class="rm-item">eBay listing CSV export from graded cert (existing ListingBuilder tab)</div>
+        <div class="rm-item">P&amp;L report view with realized + unrealized summary</div>
       </div>
     </div>
     <div class="rm-links">
-      <a href="https://github.com/FG-CollectLabs/.github/blob/main/projects/graded-regrade-tracker/ARCHITECTURE.md" target="_blank">↗ Architecture</a>
-      <a href="https://github.com/FG-CollectLabs/.github/blob/main/projects/graded-regrade-tracker/TODO.md" target="_blank">↗ Roadmap</a>
+      <a href="https://fg-collectlabs.github.io/graded-lister/" target="_blank">↗ Live App</a>
+      <a href="https://github.com/FG-CollectLabs/graded-lister" target="_blank">↗ Frontend</a>
+      <a href="https://github.com/FG-CollectLabs/graded-lister-backend" target="_blank">↗ Backend</a>
     </div>
   </div>
 
@@ -896,6 +965,7 @@ const CHECKS = [
   { name: "Card Inventory",          url: "https://inventory.futuregadgetlabs.com",                              health: null },
   { name: "Card Inventory API",      url: "https://inventory-api.futuregadgetlabs.com/healthz",                  health: null },
   { name: "Slab Cracker Backend",    url: "http://192.168.86.183:8081/healthz",                                   health: null },
+  { name: "Graded Lister API",       url: "https://graded-api.futuregadgetlabs.com/healthz",                       health: null },
 ];
 
 async function checkOne(c) {
