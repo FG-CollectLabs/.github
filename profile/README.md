@@ -55,12 +55,13 @@ Everything here is production software running against real data — not toy pro
 | [`anontcg-deal-analyzer`](https://github.com/FG-CollectLabs/anontcg-deal-analyzer) | **Python · Playwright · Hugo** | Deal analyzer for AnonTCG subscriber pricing. Playwright scrapes TCGPlayer sealed prices; Hugo dashboard ranks 45 products across 5 games by discount metric. |
 | [`graded-regrade-tracker`](https://github.com/FG-CollectLabs/graded-regrade-tracker) | **Go · pgx · sqlc · PostgreSQL** | Buy→grade→sell P&L CLI. Tracks purchases, grading submissions, results, and sales. Joins market-tracker at report time for market context at each purchase date. |
 
-### Inventory (In Development)
+### Inventory & Break Tools (In Development)
 
 | Repo | Stack | Purpose |
 | --- | --- | --- |
 | [`card-inventory-backend`](https://github.com/FG-CollectLabs/card-inventory-backend) | **Go · pgx · PostgreSQL 16 · Firebase Auth · Docker** | Multi-tenant inventory SaaS API. Acquisitions (box breaks), chaos-sort bin locations, item transformations (break/grade/crack), listing sync, eBay order import. Firebase JWT auth with org-level RLS. |
-| [`card-inventory-frontend`](https://github.com/FG-CollectLabs/card-inventory-frontend) | **Vite · React · TypeScript · Firebase Auth** | Inventory management SPA. Card scanning, bin management, acquisition tracking, listing workflow. |
+| [`card-inventory-frontend`](https://github.com/FG-CollectLabs/card-inventory-frontend) | **Vite · React · TypeScript · Firebase Auth** | Inventory management SPA. Card scanning, bin management, acquisition tracking, listing workflow, eBay File Exchange CSV export with scan images. |
+| [`box-break-app`](https://github.com/FG-CollectLabs/box-break-app) | **Vite · React · TypeScript · GitHub Pages** | Standalone box break scanner. Drag-drop card scan images → auto-identify fronts and backs via pHash+OCR → group by card with quantities → export CSV of image URLs. Integrates with card-inventory via CSV import. |
 
 ---
 

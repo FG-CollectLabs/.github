@@ -359,6 +359,22 @@
 
   <div class="card">
     <div class="card-header">
+      <div class="card-title">Box Break App</div>
+      <span class="badge badge-live">live</span>
+    </div>
+    <div class="card-desc">Standalone box break scanner. Drop a folder of card scans — fronts and backs auto-identified via pHash+OCR, paired in sequence, and grouped by card with quantities. Export CSV with stored image URLs. Integrates with Card Inventory via CSV import.</div>
+    <div class="tech-row">
+      <span class="tech">Vite</span><span class="tech">React 18</span><span class="tech">TypeScript</span><span class="tech">GitHub Pages</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://fg-collectlabs.github.io/box-break-app/" target="_blank">fg-collectlabs.github.io/box-break-app/</a></div>
+      <div class="link-row"><span class="link-label">repo</span><a href="https://github.com/FG-CollectLabs/box-break-app" target="_blank">box-break-app</a></div>
+    </div>
+    <div class="cmd">cd box-break-app &amp;&amp; npm run dev</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
       <div class="card-title">Bulk Lot Analyzer</div>
       <span class="badge badge-plan">planning</span>
     </div>
@@ -966,6 +982,7 @@ const CHECKS = [
   { name: "Card Inventory API",      url: "https://inventory-api.futuregadgetlabs.com/healthz",                  health: null },
   { name: "Slab Cracker Backend",    url: "http://192.168.86.183:8081/healthz",                                   health: null },
   { name: "Graded Lister API",       url: "https://graded-api.futuregadgetlabs.com/healthz",                       health: null },
+  { name: "Box Break App",           url: "https://fg-collectlabs.github.io/box-break-app/",                        health: null },
 ];
 
 async function checkOne(c) {
