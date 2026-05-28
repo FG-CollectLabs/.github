@@ -629,6 +629,24 @@
 
   <div class="card">
     <div class="card-header">
+      <div class="card-title">Grading Predictor</div>
+      <span class="badge badge-live">live</span>
+    </div>
+    <div class="card-desc">Personal grading prediction dataset. Log PSA certs with front/back scan images (GCS). Annotate defects manually: centering, surface, corners, edges. Card detail shows defect buckets with PSA 9 vs 10 distribution — empirical hit rates for each defect profile. Auto-centering from slab-cracker planned.</div>
+    <div class="tech-row">
+      <span class="tech">Vite / React / TS</span><span class="tech">Go</span><span class="tech">pgx</span><span class="tech">PostgreSQL</span><span class="tech">GCS</span><span class="tech">GitHub Pages</span>
+    </div>
+    <div class="links">
+      <div class="link-row"><span class="link-label">live</span><a href="https://fg-collectlabs.github.io/grading-predictor-frontend/" target="_blank">fg-collectlabs.github.io/grading-predictor-frontend/</a></div>
+      <div class="link-row"><span class="link-label">api</span><a href="https://grading-api.futuregadgetlabs.com/healthz" target="_blank">grading-api.futuregadgetlabs.com</a><span style="color:var(--muted);font-size:11px;margin-left:6px;">→ LXC 109 :8084 (CF tunnel pending)</span></div>
+      <div class="link-row"><span class="link-label">frontend</span><a href="https://github.com/FG-CollectLabs/grading-predictor-frontend" target="_blank">grading-predictor-frontend</a></div>
+      <div class="link-row"><span class="link-label">backend</span><a href="https://github.com/FG-CollectLabs/grading-predictor-backend" target="_blank">grading-predictor-backend</a></div>
+    </div>
+    <div class="cmd">cd grading-predictor-frontend &amp;&amp; npm run dev</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
       <div class="card-title">Graded Market Watch</div>
       <span class="badge badge-live">live</span>
     </div>
@@ -691,6 +709,13 @@
     ├── <span class="acc">slab-cracker-backend</span>  (Go :8081)  ←─ <span class="hi">PostgreSQL</span> 192.168.86.183 · slabcracker DB
     │     persists certs + every centering analysis (regrading history)
     └── joins  market-tracker  /v1/cards/{display_key}/graded  for PSA9→PSA10 price delta
+
+  <span class="acc">grading-predictor-frontend</span>  (Vite/React :5176)
+    ├── card browser → card detail → defect buckets + PSA 9/10 distribution
+    ├── cert entry: cert number + front/back image upload + defect annotation form
+    └── <span class="acc">grading-predictor-backend</span>  (Go :8084)  ←─ <span class="hi">PostgreSQL</span> 192.168.86.183 · grading_predictor DB
+          ├── <span class="hi">GCS</span>  fg-grading-predictor bucket  (cert scan images)
+          └── future: receives auto-centering from slab-cracker-backend
 
   <span class="acc">anontcg-deal-analyzer</span>  (Hugo :1314)
     └── Python MCP servers (AnonTCG Shopify API + Playwright TCGPlayer scrape)
@@ -782,6 +807,12 @@
       <td>slabcracker</td>
       <td>slab-cracker-backend</td>
       <td>certs, cert_scans, centering_analyses</td>
+    </tr>
+    <tr>
+      <td>192.168.86.183:5432 (LXC 102)</td>
+      <td>grading_predictor</td>
+      <td>grading-predictor-backend</td>
+      <td>cards, certifications, cert_images, inspections</td>
     </tr>
     <tr>
       <td>BigQuery</td>
@@ -906,6 +937,33 @@
 
   <div class="rm-card">
     <div class="rm-header">
+      <div class="rm-title">Grading Predictor</div>
+      <span class="rm-release-none" style="font-size:11px;color:var(--muted);">no release yet</span>
+    </div>
+    <div>
+      <div class="rm-next-label">v0.1 — Core Data Entry</div>
+      <div class="rm-items">
+        <div class="rm-item">Cards table + cert entry with front/back scan upload to GCS</div>
+        <div class="rm-item">Manual defect annotation: centering, surface, corners, edges</div>
+        <div class="rm-item">Card browser + card detail with cert list</div>
+        <div class="rm-item">Defect bucket view: grade distribution per profile</div>
+      </div>
+    </div>
+    <div>
+      <div class="rm-next-label">Future</div>
+      <div class="rm-items">
+        <div class="rm-item">Auto-centering input from slab-cracker analysis</div>
+        <div class="rm-item">Prediction surface: match defect profile → historical hit rate</div>
+        <div class="rm-item">CSV bulk import for backfill</div>
+      </div>
+    </div>
+    <div class="rm-links">
+      <a href="https://github.com/FG-CollectLabs/.github/blob/main/projects/grading-predictor/roadmap.md" target="_blank">↗ Roadmap</a>
+    </div>
+  </div>
+
+  <div class="rm-card">
+    <div class="rm-header">
       <div class="rm-title">Graded Market Watch</div>
       <span class="rm-release">v0.1 shipped</span>
     </div>
@@ -983,6 +1041,7 @@ const CHECKS = [
   { name: "Slab Cracker Backend",    url: "http://192.168.86.183:8081/healthz",                                   health: null },
   { name: "Graded Lister API",       url: "https://graded-api.futuregadgetlabs.com/healthz",                       health: null },
   { name: "Box Break App",           url: "https://boxbreak.futuregadgetlabs.com/",                                  health: null },
+  { name: "Grading Predictor API",  url: "http://192.168.86.199:8084/healthz",                                       health: null },
 ];
 
 async function checkOne(c) {
