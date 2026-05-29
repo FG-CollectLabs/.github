@@ -16,7 +16,7 @@ reviews happen at card shows or while glancing at eBay listings on the go. Deskt
 remains supported but is not the primary form factor.
 
 **OAuth gating.** Firebase Google sign-in with email allowlist
-(`fglabs.contact@gmail.com`) — same pattern as the rest of `graded-lister`. Tool is
+(`nguye208@gmail.com`) — same pattern as the rest of `graded-lister`. Tool is
 private to me; later commercialization handled per-user out of band.
 
 ---
