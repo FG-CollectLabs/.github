@@ -7,71 +7,71 @@
 
 ## M1 — Backend skeleton
 
-- [ ] T-001 Init Go module, directory structure per ARCHITECTURE.md
-- [ ] T-002 `internal/config`: load env vars (`INVENTORY_API_TOKEN`, `DATABASE_URL`, `MARKET_TRACKER_BASE_URL`, `PORT`)
-- [ ] T-003 `cmd/api`: chi router, CORS, Bearer token middleware, `/v1/health` endpoint
-- [ ] T-004 Goose migration runner on startup (same pattern as card-inventory-backend v1)
-- [ ] T-005 sqlc config + first codegen pass (generates after M2 migrations are written)
+- [x] T-001 Init Go module, directory structure per ARCHITECTURE.md
+- [x] T-002 `internal/config`: load env vars (`API_TOKEN`, `DATABASE_URL`, `MARKET_TRACKER_URL`, `API_ADDR`, `CORS_ORIGINS`)
+- [x] T-003 `cmd/api`: stdlib mux, CORS, Bearer token middleware, `/healthz` + `/readyz` endpoints
+- [x] T-004 Goose migration runner on startup
+- [x] T-005 No sqlc — using direct pgx queries (same pattern as card-inventory-backend v1)
 
 ## M2 — Schema
 
-- [ ] T-006 Migration 001: `purchase_orders` table
-- [ ] T-007 Migration 002: `sealed_items`, `singles_items`, `graded_items` tables
-- [ ] T-008 Migration 003: `breaks` table
-- [ ] T-009 Migration 004: `sales` table
-- [ ] T-010 Migration 005: `market_prices` cache table
-- [ ] T-011 Run sqlc codegen — verify all tables generate clean
+- [x] T-006 Migration 0001: `purchase_orders` table
+- [x] T-007 Migration 0002: `sealed_items`, `singles_items`, `graded_items` tables
+- [x] T-008 Migration 0003: `breaks` table + `singles_items.break_id` FK + `sales` table
+- [x] T-009 (merged into 0003)
+- [x] T-010 Migration 0004: `market_prices` cache table
+- [x] T-011 N/A — no sqlc; direct pgx queries confirmed compile-clean
 
 ## M3 — Purchase orders CRUD
 
-- [ ] T-012 sqlc queries: list, get, create, update, delete purchase_orders
-- [ ] T-013 `internal/purchases`: handler + service layer
-- [ ] T-014 Routes: `GET /v1/purchase-orders`, `POST /v1/purchase-orders`, `GET /v1/purchase-orders/:id`, `PATCH /v1/purchase-orders/:id`, `DELETE /v1/purchase-orders/:id`
+- [x] T-012 Direct pgx queries in handler
+- [x] T-013 `internal/purchases/handler.go`
+- [x] T-014 Routes registered: GET/POST/GET/:id/PATCH/:id/DELETE/:id
 
 ## M4 — Item CRUD (sealed)
 
-- [ ] T-015 sqlc queries: list (with filters: status, game, set_code), get, create, update, delete sealed_items
-- [ ] T-016 `internal/sealed`: handler + service layer
-- [ ] T-017 Routes: `GET /v1/sealed`, `POST /v1/sealed`, `GET /v1/sealed/:id`, `PATCH /v1/sealed/:id`, `DELETE /v1/sealed/:id`
+- [x] T-015 Direct pgx queries with status/game filters + market price LEFT JOIN
+- [x] T-016 `internal/sealed/handler.go`
+- [x] T-017 Routes registered
 
 ## M5 — Item CRUD (singles)
 
-- [ ] T-018 sqlc queries: list (with filters: status, game, finish, condition, full-text on card_name), get, create, update, delete singles_items
-- [ ] T-019 `internal/singles`: handler + service layer
-- [ ] T-020 Routes: `GET /v1/singles`, `POST /v1/singles`, `GET /v1/singles/:id`, `PATCH /v1/singles/:id`, `DELETE /v1/singles/:id`
+- [x] T-018 Direct pgx queries with status/game/finish/condition/full-text/break_id filters
+- [x] T-019 `internal/singles/handler.go`
+- [x] T-020 Routes registered
 
 ## M6 — Item CRUD (graded)
 
-- [ ] T-021 sqlc queries: list (with filters: status, grading_co, grade, game), get, create, update, delete graded_items
-- [ ] T-022 `internal/graded`: handler + service layer
-- [ ] T-023 Routes: `GET /v1/graded`, `POST /v1/graded`, `GET /v1/graded/:id`, `PATCH /v1/graded/:id`, `DELETE /v1/graded/:id`
+- [x] T-021 Direct pgx queries with status/game/grading_co filters
+- [x] T-022 `internal/graded/handler.go`
+- [x] T-023 Routes registered
 
 ## M7 — Sales CRUD
 
-- [ ] T-024 sqlc queries: list (all modes, with filters: mode, platform, date range), get, create sales
-- [ ] T-025 `internal/sales`: handler + service layer; on create → also patches item status to `sold`
-- [ ] T-026 Routes: `GET /v1/sales`, `POST /v1/sales`, `GET /v1/sales/:id`
+- [x] T-024 Direct pgx queries with mode/platform filters
+- [x] T-025 `internal/sales/handler.go`; create → tx: insert sale + UPDATE item status='sold'
+- [x] T-026 Routes registered
 
 ## M8 — Market price integration
 
-- [ ] T-027 `internal/market`: HTTP client for `{MARKET_TRACKER_BASE_URL}/v1/prices`
-- [ ] T-028 sqlc queries: upsert + get market_prices rows
-- [ ] T-029 Background goroutine: on startup + every 4h, collect all `in_stock`/`listed` tcgplayer_product_ids across all three item tables → batch fetch → upsert market_prices
-- [ ] T-030 Attach `current_market_value` and `unrealized_pnl` to item responses (join market_prices at query time)
+- [x] T-027 `internal/market/market.go` — HTTP client for market-tracker `/v1/prices`
+- [x] T-028 Upsert in `Refresher.upsert()`
+- [x] T-029 Background goroutine, startup + every 4h; collects active product IDs across all 3 tables
+- [x] T-030 market_price joined via LEFT JOIN on every item list/get response
 
 ## M9 — Breaks
 
-- [ ] T-031 sqlc queries: create break, list breaks for a sealed_item
-- [ ] T-032 `internal/breaks`: handler — accepts `sealed_item_id`, `qty_broken`, optional CSV payload
-- [ ] T-033 CSV ingest: parse box-break-app CSV export format → create singles_items with `break_id` set, apportion cost basis
-- [ ] T-034 Route: `POST /v1/breaks`, `GET /v1/sealed/:id/breaks`
-- [ ] T-035 On break creation: decrement `sealed_items.qty`; if qty reaches 0, set status = `broken`
+- [x] T-031 Direct pgx queries in breaks handler
+- [x] T-032 `internal/breaks/handler.go` — create validates qty, tx: insert break + decrement sealed qty
+- [ ] T-033 CSV ingest: parse box-break-app CSV → bulk create singles_items with break_id + apportioned cost basis
+- [x] T-034 Routes: POST /api/v1/breaks, GET /api/v1/sealed/:sealed_id/breaks, GET /api/v1/breaks/:id
+- [x] T-035 On break creation: qty decremented; status → 'broken' when qty reaches 0
 
 ## M10 — Dashboard / P&L endpoint
 
-- [ ] T-036 sqlc queries for dashboard rollup: total invested, realized P&L, unrealized P&L, by mode and overall
-- [ ] T-037 `internal/dashboard`: assemble rollup from all three item tables + sales + market_prices
-- [ ] T-038 Route: `GET /v1/dashboard` → returns `{ total_invested, realized_pnl, unrealized_pnl, by_mode: { sealed: {...}, singles: {...}, graded: {...} } }`
+- [x] T-036 Direct pgx queries for per-mode rollup
+- [x] T-037 `internal/dashboard/handler.go`
+- [x] T-038 Route: GET /api/v1/dashboard
 
 ## M11 — Frontend skeleton
 
