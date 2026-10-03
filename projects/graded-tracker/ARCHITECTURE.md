@@ -98,7 +98,7 @@ eBay columns show what the buyer paid (price plus shipping).
 
 ## 5. Schema (migration 0015)
 
-The repo skips 0012; the next free number is 0014.
+The repo skips 0012, and prod already has version 14 recorded (lot-scout was applied as 0014 before being renamed 0013), so this is 0015.
 
 ```sql
 CREATE TABLE tracked_cards (
