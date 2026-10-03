@@ -96,7 +96,7 @@ Map onto the existing `graded_snapshots_weekly (company, grade)` as `cgc`/`10` a
 `buyers_premium_pct` and `all_in` separately. Fanatics columns show all-in, and
 eBay columns show what the buyer paid (price plus shipping).
 
-## 5. Schema (migration 0014)
+## 5. Schema (migration 0015)
 
 The repo skips 0012; the next free number is 0014.
 
