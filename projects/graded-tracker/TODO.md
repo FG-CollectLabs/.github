@@ -13,7 +13,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md). Start with ME1.
 Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enrichment:
 188 cards + 122 reverse holos; sync: 64 tracked). **Deployed 2026-10-03** (prod at migration 16, API redeployed, ME1 enriched + synced: 64 tracked).
 
-- [x] GT-090 Rotate `ADMIN_API_TOKEN` (done 2026-10-03; still remove `VITE_ADMIN_API_KEY` from the frontend Pages build)
+- [x] GT-090 Rotate `ADMIN_API_TOKEN` (done 2026-10-03; `VITE_ADMIN_API_KEY` removed from the Pages build and the `MT_ADMIN_API_KEY` secret deleted)
 - [x] GT-091 `goose status` on prod, then `goose up` (0013 now has goose annotations and is
       idempotent; 0016 adds the tracker tables; prod needs `goose up --allow-missing` once, run as the table owner (its version 14 is lot-scout; 0015 is the snapshot-column fix from #7))
 - [x] GT-092 Push backend `master` → image build → `./deploy.sh`
