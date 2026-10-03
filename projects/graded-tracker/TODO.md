@@ -15,7 +15,7 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 
 - [ ] GT-090 Rotate `ADMIN_API_TOKEN` before deploying (see the market-tracker-backend PR)
 - [ ] GT-091 `goose status` on prod, then `goose up` (0013 now has goose annotations and is
-      idempotent; 0015 adds the tracker tables; prod needs `goose up --allow-missing` once (its version 14 is lot-scout))
+      idempotent; 0016 adds the tracker tables; prod needs `goose up --allow-missing` once, run as the table owner (its version 14 is lot-scout; 0015 is the snapshot-column fix from #7))
 - [ ] GT-092 Push backend `master` → image build → `./deploy.sh`
 - [ ] GT-093 On .199: `enrich-pokemon -set me1 -tcgdex me01`, then `sync-tracked`
 - [ ] GT-094 Register the MCP server locally (`docs/mcp.md`)
@@ -27,7 +27,7 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 
 ### Tracking
 - [x] GT-020 `internal/tracking/tracking.yaml` (sets, rarities, top-10 Pokémon, top-10 artists, finishes)
-- [x] GT-021 Migration 0015: `tracked_cards`, `card_sales`, `card_supply_snapshots`, `card_sales_weekly`, `ingest_runs`
+- [x] GT-021 Migration 0016: `tracked_cards`, `card_sales`, `card_supply_snapshots`, `card_sales_weekly`, `ingest_runs`
 - [x] GT-022 `cmd/sync-tracked`: apply rules, respect pinned/excluded
 - [x] GT-023 Verify ME1 = 64 tracked rows
 

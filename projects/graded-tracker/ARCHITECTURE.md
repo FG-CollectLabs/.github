@@ -96,9 +96,9 @@ Map onto the existing `graded_snapshots_weekly (company, grade)` as `cgc`/`10` a
 `buyers_premium_pct` and `all_in` separately. Fanatics columns show all-in, and
 eBay columns show what the buyer paid (price plus shipping).
 
-## 5. Schema (migration 0015)
+## 5. Schema (migration 0016)
 
-The repo skips 0012, and prod already has version 14 recorded (lot-scout was applied as 0014 before being renamed 0013), so this is 0015.
+The repo skips 0012, and prod already has version 14 recorded (lot-scout was applied as 0014 before being renamed 0013), and master took 0015 for the snapshot-column fix, so this is 0016.
 
 ```sql
 CREATE TABLE tracked_cards (
