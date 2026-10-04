@@ -72,12 +72,12 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 
 ## Phase 4 — bulk lots, Fanatics automation, Japanese, analytics
 
-### Lot evaluator (`market-tracker-backend`)
-- [ ] GT-100 Migration 0017: `lots`, `lot_items`
-- [ ] GT-101 Valuation: market comp per item (Fanatics → eBay → PriceCharting), cost basis, net + profit for FanCash and cash
-- [ ] GT-102 Admin API: create/list/get lots, add/update items, evaluation summary
-- [ ] GT-103 MCP tools: `create_lot`, `add_lot_items`, `update_lot_item`, `evaluate_lot`, `list_lots`
-- [ ] GT-104 Realized P&L as items sell
+### Lot evaluator (`market-tracker-backend`) — built 2026-10-04, PR #9, not deployed
+- [x] GT-100 Migration 0017: `lots`, `lot_items`
+- [x] GT-101 Valuation: market comp per item (Fanatics → eBay → PriceCharting), cost basis, net + profit for FanCash and cash
+- [x] GT-102 Admin API: create/list/get lots, add/update items, evaluation summary
+- [x] GT-103 MCP tools: `create_lot`, `add_lot_items`, `update_lot_item`, `evaluate_lot`, `list_lots`
+- [x] GT-104 Realized P&L as items sell
 
 ### Fanatics automation
 - [ ] GT-110 Apify account + token (user)
