@@ -86,9 +86,9 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 - [ ] GT-113 Weekly cron after the Fanatics close
 
 ### Japanese
-- [ ] GT-120 `enrich-pokemon -lang ja`: `jp-` sets from TCGdex ja (rarity, artist), flag sets without rarity
-- [ ] GT-121 English names + prices from PriceCharting JP consoles (console-prices with `jp-` set codes)
-- [ ] GT-122 `tracking.yaml`: recent JP sets, AR/CHR and up
+- [x] GT-120 `import-jp` (not enrich): cards numbered above the official count = AR and better; 43 sets S9–M6, 1,662 cards (backend PR #10)
+- [x] GT-121 English names from PriceCharting console JSON; console URL stored so console-prices prices them (per-card CGC scrape skipped for JP tracked cards, analyzer PR #1)
+- [x] GT-122 `tracking.yaml`: `jp-*` + `track_all_sets`; frontend set filter (frontend PR #2)
 
 ### Grade 9
 - [ ] GT-130 Stop storing PriceCharting "Grade 9" as PSA 9; keep it as an any-grader reference
