@@ -245,3 +245,62 @@ real repricing.
 - The weekly cron has never successfully refreshed graded data. The worker at
   `127.0.0.1:8001` isn't running on `.199`, and the runner has no SSH key.
   **Manual MCP entry doesn't depend on either**; automated PriceCharting does.
+
+## 10. Phase 4: bulk-slab lots, Fanatics automation, Japanese, analytics
+
+Added 2026-10-04. The question: is buying wholesale lots of graded slabs (e.g. 100 ×
+CGC 10 Japanese AR/CHR at $15 each) and selling them one by one as Fanatics Buy Now
+listings a viable business? Built for personal use, not resale.
+
+### Where each piece lives
+| Piece | Repo | Why |
+|---|---|---|
+| Lot evaluator (schema, API, MCP tools) | `market-tracker-backend` | an app feature over the same catalog and sales |
+| Fanatics sold-data ingest | `market-tracker-backend` (`cmd/ingest-fanatics`, Apify) | writes `card_sales` like the MCP does |
+| Japanese catalog | `market-tracker-backend` (`enrich-pokemon -lang ja`) + `sellthrough-analyzer` (PriceCharting JP consoles) | same pipeline as ME1 |
+| Analytics | **new `graded-analytics` repo** | read-only consumer: notebooks + SQL on a read-only Postgres role; promote what proves useful into the tracker |
+
+One database. The analytics repo never writes.
+
+### Lot evaluator
+`lots` (vendor, price, declared item count, inbound shipping, vault fee per item
+(default $3), cash seller fee % (default 6), FanCash fee % (0), status
+evaluating / purchased / closed) and `lot_items` (card, cert, grader, grade key,
+status held / listed / sold / sold_elsewhere, list and sold price, payout
+fancash / cash).
+
+Per item, computed on read:
+- **market**: median all-in of Fanatics sales at that grade over 90 days, else eBay,
+  else the PriceCharting grade price; the source is shown next to the value
+- **cost basis**: (lot price + inbound shipping) / item count
+- **net (FanCash)** = market × (1 − FanCash fee) − vault fee; **net (cash)** = market ×
+  (1 − cash fee) − vault fee; profit = net − cost basis
+
+Per lot: totals for both payouts, ROI, break-even price per card, items with no
+comps, items to sell elsewhere (net below cost), and realized P&L as items sell.
+FanCash only counts as profit once it can be turned into cash (e.g. by funding the
+next lot); the summary shows both payouts side by side for that reason.
+
+Lot endpoints are **admin-only, reads included** (purchase prices aren't public),
+so the evaluator is used through MCP tools until the frontend has Google sign-in.
+
+### Fanatics automation
+Apify actor `jungle_synthesizer/fanaticscollect-weekly-auction-scraper` (~$2 per
+1,000 records; sold auctions, Buy Now listings, buyer's premium, grade, bids).
+Driven by the tracked list and lot items: one search per card + grade, results
+written to `card_sales` with `entry_method = 'scraper'` and the lot id as
+`external_id` so reruns dedupe. Validate the actor's output on real Pokémon slabs
+before relying on it.
+
+### Japanese cards
+- Set codes are prefixed: `jp-sv2a`, display keys `pokemon-jp-sv2a-180`.
+- Rarity and illustrator from TCGdex `ja` (international rarity names: AR =
+  "Illustration Rare", SAR = "Special Illustration Rare"). Some special sets
+  (SV8a, SV4a) have no rarity in TCGdex; those need a fallback (numbers above the
+  official count) and are flagged.
+- English names from the PriceCharting Japanese console page, matched by number;
+  PriceCharting also prices them (raw, Grade 9, PSA 10; CGC on card pages).
+
+### Grade 9
+PriceCharting's "Grade 9" is any grader. It is stored as PSA 9 today, which is
+wrong. PSA 9 and CGC 9 values come from Fanatics / eBay sales instead.

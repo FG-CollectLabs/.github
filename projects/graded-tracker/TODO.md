@@ -70,6 +70,34 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 - [ ] GT-083 Max-bid suggestion: all-in cost vs eBay net resale (13% fees)
 - [ ] GT-084 Second auction house via the same MCP `source` field
 
+## Phase 4 — bulk lots, Fanatics automation, Japanese, analytics
+
+### Lot evaluator (`market-tracker-backend`)
+- [ ] GT-100 Migration 0017: `lots`, `lot_items`
+- [ ] GT-101 Valuation: market comp per item (Fanatics → eBay → PriceCharting), cost basis, net + profit for FanCash and cash
+- [ ] GT-102 Admin API: create/list/get lots, add/update items, evaluation summary
+- [ ] GT-103 MCP tools: `create_lot`, `add_lot_items`, `update_lot_item`, `evaluate_lot`, `list_lots`
+- [ ] GT-104 Realized P&L as items sell
+
+### Fanatics automation
+- [ ] GT-110 Apify account + token (user)
+- [ ] GT-111 Run the actor on a few real Pokémon slabs; check grade / Pristine / premium / sold date
+- [ ] GT-112 `cmd/ingest-fanatics`: tracked cards + lot items → `card_sales` (`entry_method='scraper'`)
+- [ ] GT-113 Weekly cron after the Fanatics close
+
+### Japanese
+- [ ] GT-120 `enrich-pokemon -lang ja`: `jp-` sets from TCGdex ja (rarity, artist), flag sets without rarity
+- [ ] GT-121 English names + prices from PriceCharting JP consoles (console-prices with `jp-` set codes)
+- [ ] GT-122 `tracking.yaml`: recent JP sets, AR/CHR and up
+
+### Grade 9
+- [ ] GT-130 Stop storing PriceCharting "Grade 9" as PSA 9; keep it as an any-grader reference
+
+### Analytics (`graded-analytics`, new repo)
+- [ ] GT-140 Read-only Postgres role
+- [ ] GT-141 Repo scaffold: notebooks + SQL, connection via env
+- [ ] GT-142 First analyses: lot ROI distribution, sell-through by price band, Pristine vs Gem spread
+
 ## Open questions
 
 - [ ] Current Fanatics buyer's premium rate (default for `record_sales`)
