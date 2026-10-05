@@ -5,7 +5,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md). Start with ME1.
 ## Phase 0 — homelab (blocks automated PriceCharting only, not manual entry)
 
 - [ ] GT-001 Provision the runner SSH key on LXC 109 + `known_hosts` for `.199`
-- [ ] GT-002 Deploy `sellthrough-worker` on `.199:8001` with `MARKET_API_URL` / `MARKET_API_KEY`
+- [x] GT-002 Deploy `sellthrough-worker` on `.199:8001` (2026-10-05; image fixed in analyzer PR #2)
 - [ ] GT-003 `gh workflow run ingest.yml -f job=graded-prices` succeeds end to end
 
 ## Phase 1 — tracked list + manual entry
@@ -19,7 +19,7 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 - [x] GT-092 Push backend `master` → image build → `./deploy.sh`
 - [x] GT-093 On .199: `enrich-pokemon -set me1 -tcgdex me01`, then `sync-tracked`
 - [x] GT-094 Register the MCP server locally (`docs/mcp.md`)
-- [ ] GT-095 Redeploy the worker image so console-prices picks up the Pristine / reverse-holo fixes
+- [x] GT-095 Redeploy the worker image so console-prices picks up the Pristine / reverse-holo fixes
 
 ### Catalog
 - [x] GT-010 `cmd/enrich-pokemon`: TCGdex → `cards.rarity`, `details.artist`, reverse-holo rows (`-rh`)
