@@ -87,7 +87,7 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 - [ ] GT-114 eBay sold + Buy Now: eBay returns 403 for the home IP (site and official API); needs a decision
 
 ### Japanese
-- [x] GT-120 `import-jp` (not enrich): cards numbered above the official count = AR and better; 43 sets S9–M6, 1,662 cards (backend PR #10)
+- [x] GT-120 `import-jp` (not enrich): cards numbered above the official count = AR and better; 43 sets S9–M6, 1,662 cards (backend PR #10; deployed 2026-10-05, prod: 1,662 imported + tracked)
 - [x] GT-121 English names from PriceCharting console JSON; console URL stored so console-prices prices them (per-card CGC scrape skipped for JP tracked cards, analyzer PR #1)
 - [x] GT-122 `tracking.yaml`: `jp-*` + `track_all_sets`; frontend set filter (frontend PR #2)
 
