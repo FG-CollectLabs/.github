@@ -79,11 +79,12 @@ Built and tested locally 2026-09-30 against a copy of the prod ME1 catalog (enri
 - [x] GT-103 MCP tools: `create_lot`, `add_lot_items`, `update_lot_item`, `evaluate_lot`, `list_lots`
 - [x] GT-104 Realized P&L as items sell
 
-### Fanatics automation
-- [ ] GT-110 Apify account + token (user)
-- [ ] GT-111 Run the actor on a few real Pokémon slabs; check grade / Pristine / premium / sold date
-- [ ] GT-112 `cmd/ingest-fanatics`: tracked cards + lot items → `card_sales` (`entry_method='scraper'`)
-- [ ] GT-113 Weekly cron after the Fanatics close
+### Fanatics automation (self-hosted, no Apify) — backend PR #11, not deployed
+- [x] GT-110 Fanatics client: public sales-history API (sold; auction prices include 20% BP) + Algolia listings (key from anonymous GraphQL)
+- [x] GT-111 Title parsing/matching on real titles: language from title, PRISTINE / BLACK LABEL, number, name, set, reverse holo
+- [x] GT-112 `cmd/ingest-fanatics` → `card_sales` + `market_listings` (migration 0018) + supply counts; refresh endpoint + MCP `fanatics_refresh` / `fanatics_lookup`
+- [x] GT-113 Weekly cron Monday 04:00 UTC
+- [ ] GT-114 eBay sold + Buy Now: eBay returns 403 for the home IP (site and official API); needs a decision
 
 ### Japanese
 - [x] GT-120 `import-jp` (not enrich): cards numbered above the official count = AR and better; 43 sets S9–M6, 1,662 cards (backend PR #10)
